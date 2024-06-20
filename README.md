@@ -11,3 +11,10 @@
 只需要提交代码，不要上传模型
 
 老师会不定时对提交内容做审批，提交后不用着急
+
+
+
+git pull
+git add .
+git commit -m "首次提交"
+git push
