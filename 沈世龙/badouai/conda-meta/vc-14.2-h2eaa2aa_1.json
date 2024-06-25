@@ -1,0 +1,33 @@
+{
+  "build": "h2eaa2aa_1",
+  "build_number": 1,
+  "channel": "https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/win-64",
+  "constrains": [],
+  "depends": [
+    "vs2015_runtime >=14.29.30133"
+  ],
+  "extracted_package_dir": "C:\\Users\\\u6c88\u4e16\u9f99\\.conda\\pkgs\\vc-14.2-h2eaa2aa_1",
+  "features": "",
+  "files": [],
+  "fn": "vc-14.2-h2eaa2aa_1.conda",
+  "license": "BSD-3-Clause",
+  "link": {
+    "source": "C:\\Users\\\u6c88\u4e16\u9f99\\.conda\\pkgs\\vc-14.2-h2eaa2aa_1",
+    "type": 1
+  },
+  "md5": "657899ae7a3bc5d0490b8bc9f02eed50",
+  "name": "vc",
+  "package_tarball_full_path": "C:\\Users\\\u6c88\u4e16\u9f99\\.conda\\pkgs\\vc-14.2-h2eaa2aa_1.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "None",
+  "sha256": "9d805bb094b7c7af70b376368bc8f1718cc994aa91b501a31d8eccb6f1b35ec6",
+  "size": 9969,
+  "subdir": "win-64",
+  "timestamp": 1715797316000,
+  "track_features": "vc14",
+  "url": "https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/win-64/vc-14.2-h2eaa2aa_1.conda",
+  "version": "14.2"
+}
