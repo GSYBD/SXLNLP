@@ -1,0 +1,13 @@
+
+which python3
+python3 hello.py
+pip3 --version
+sudo python3 -m pip install -U --force-reinstall pip
+pip --version
+pip install torch==1.10.0 -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+pip show jupyter
+jupyter notebook
+vi ~/.bash_profile 
+source ~/.bash_profile
+!pip install matplotlib
