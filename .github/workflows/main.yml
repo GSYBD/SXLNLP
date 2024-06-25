@@ -1,0 +1,28 @@
+name: Auto Merge PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check if PR can be merged
+        id: check_pr
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          MERGEABLE=$(gh pr view $PR_NUMBER --json mergeable -q .mergeable)
+          echo "MERGEABLE=$MERGEABLE" >> $GITHUB_OUTPUT
+
+      - name: Merge PR
+        if: steps.check_pr.outputs.MERGEABLE == 'true'
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          gh pr merge $PR_NUMBER --merge --auto
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
