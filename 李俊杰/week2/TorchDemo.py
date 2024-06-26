@@ -62,15 +62,13 @@ def evaluate(model):
     with torch.no_grad():
         y_pred = model(x)  # 模型预测
         for y_p, y_t in zip(y_pred, y):  # 与真实标签进行对比
+            max_index = np.argmax(y_p)
             if torch.equal(y_p, y_t):
                 correct += 1
             else:
                 wrong += 1
     print("正确预测个数：%d, 正确率：%f" % (correct, correct / (correct + wrong)))
     return correct / (correct + wrong)
-
-
-# max_index = np.argmax(y_p)
 
 
 def main():
