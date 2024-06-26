@@ -22,8 +22,8 @@ class MyModel(nn.Module):
             return self.loss_func(y_pred, y)
         else:
             result = []
-            for i in range(len(y_pred)):
-                result.append(torch.argmax(y_pred[i]))
+            for y_p in y_pred:
+                result.append(torch.argmax(y_p))
             return result, y_pred
 
 
@@ -32,7 +32,7 @@ def generate_samples(train_size):
     samples = []
     labels = []
     for i in range(train_size):
-        sample = np.random.uniform(1, 10, 5)
+        sample = np.random.random(5)
         max_index = np.argmax(sample)
         samples.append(sample)
         labels.append(max_index)
@@ -44,13 +44,13 @@ def evaluate(model):
     model.eval()
     # 生成测试数据
     x_test, y_test = generate_samples(100)
-    y_pred = model(x_test)
+    result, y_pred = model(x_test)
     correct_num = 0
     error_num = 0
     for i in range(len(x_test)):
-        print(f"======================样本:{x_test[i]}")
-        print(f"======================预测结果:{y_pred[i]}")
-        print(f"======================预测标签:{torch.argmax(y_pred[i])},真实标签:{y_test[i]}")
+        # print(f"======================样本:{x_test[i]}")
+        # print(f"======================预测结果:{y_pred[i]}")
+        # print(f"======================预测标签:{result[i]},真实标签:{y_test[i]}")
         if torch.argmax(y_pred[i]) == y_test[i]:
             correct_num += 1
         else:
@@ -107,9 +107,9 @@ def main():
         mean_loss = np.mean(loss_log)
         print("=========\n第%d轮平均loss:%f" % (epoch + 1, mean_loss))
         log.append([acc, float(np.mean(loss_log))])
-        # 正确率大于90%，退出训练
-        if acc > 0.9:
-            break
+        # # 正确率大于98%，退出训练
+        # if acc > 0.98:
+        #     break
     # 训练结束，保存模型
     torch.save(model.state_dict(), "model.pt")
 
@@ -137,7 +137,7 @@ def predict(model_path, input_vec):
 
 
 if __name__ == "__main__":
-    # main()
+     # main()
     test_vec = [[2.17889086,7.15229675,3.31082123,10.73504317,6.18920843],
                 [1.94963533,3.5524256,3.95758807,2.95520434,0.84890681],
                 [1.78797868,5.67482528,0.13625847,1.34675372,6.19871392],
