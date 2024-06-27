@@ -1,5 +1,5 @@
 Here is the Tutorial for week2 --- to create a multi-classes classification task based on cross entropy loss
-
+ 
 """
 基于pytorch框架编写模型训练
 实现一个自行构造的找规律(机器学习)任务
