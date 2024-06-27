@@ -11,7 +11,8 @@ from sklearn.model_selection import train_test_split
 
 """
 
-分类规则：对于一个5维向量x, 它的label是这个向量中绝对值最小那个元素，即y = argmin(abs(x))
+基于sklean make_classification生成分类数据集，使用pytorch框架编写模型训练
+
 """
 
 
