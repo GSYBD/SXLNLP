@@ -92,9 +92,9 @@ def main():
     # 配置参数
     epoch_num = 50  # 训练轮数
     batch_size = 20  # 每次训练样本个数
-    train_sample = 5000  # 每轮训练总共训练的样本总数
+    train_sample = 1000  # 每轮训练总共训练的样本总数
     input_size = 5  # 输入向量维度
-    learning_rate = 0.001  # 学习率
+    learning_rate = 0.005  # 学习率
     # hidden_size = 10
     # 建立模型
     model = TorchModel(input_size)
