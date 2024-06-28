@@ -9,13 +9,10 @@ class TorchModel(nn.Module):
     def __init__(self, input_size):
         super(TorchModel, self).__init__()
         self.linear = nn.Linear(input_size, 5)  # 线性层
-        self.softmax = nn.Softmax(dim=1)  # softmax激活函数
-        self.loss = nn.functional.mse_loss  # 损失函数均方差
+        self.loss = nn.functional.cross_entropy  # loss函数使用交叉熵
 
     def forward(self, x, y=None):
-        x = self.linear(x)
-        x = self.softmax(x)
-        y_pred = self.activation(x)
+        y_pred = self.linear(x)
         if y is not None:
             return self.loss(y_pred, y)
         else:
@@ -60,7 +57,7 @@ def main():
     # 选择优化器
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    # 创建训练集
+    # 创建训练集,正常任务是读取训练集
     train_x, train_y = build_dataset(train_sample, input_size)
 
     # 训练过程
@@ -68,17 +65,14 @@ def main():
     for epoch in range(epoch_num):
         model.train()
         watch_loss = []
-        for batch_index in range(0, train_sample, batch_size):
-            x_batch = train_x[batch_index:batch_index + batch_size]
-            y_batch = train_y[batch_index:batch_index + batch_size]
+        for batch_index in range(train_sample // batch_size):
+            x = train_x[batch_index * batch_size: (batch_index + 1) * batch_size]
+            y = train_y[batch_index * batch_size: (batch_index + 1) * batch_size]
 
-            # 前向传播及计算损失
-            optimizer.zero_grad()
-            y_pred = model(x_batch)
-            loss = nn.functional.cross_entropy(y_pred, y_batch)
-            loss.backward()
-            optimizer.step()
-
+            loss = model(x, y)  # 计算loss
+            loss.backward()  # 计算梯度
+            optimizer.step()  # 更新权重
+            optimizer.zero_grad()  # 梯度归零
             watch_loss.append(loss.item())
 
         print(f"第{epoch + 1}轮平均loss: {np.mean(watch_loss)}")
