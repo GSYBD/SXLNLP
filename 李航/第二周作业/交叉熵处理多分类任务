@@ -129,7 +129,7 @@ def predict(model_path, input_vec):
     with torch.no_grad():  # 不计算梯度
         result = model.forward(torch.FloatTensor(input_vec))  # 模型预测
     for vec, res in zip(input_vec, result):
-        print("输入：%s, 预测类别：%s, 概率值：%s" % (vec, torch.argmax(res), res))  # 打印结果
+        print("输入：%s, 预测类别：%s, 概率值：%s" % (vec, torch.argmin(res), res))  # 打印结果
 
 
 if __name__ == "__main__":
