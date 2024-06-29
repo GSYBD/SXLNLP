@@ -4,7 +4,7 @@
     1. 运行课堂老师作业案例 √
     2. 参考可想案例编写复杂逻辑，实现深度学习全流成 √
     3. 课堂主要内容思维导图整理 √
-    ![image](https://github.com/ChaofanLi/SXLNLP/assets/162019957/eec5cba4-7b91-4091-b77d-eee7c48a2864)
+![image](https://github.com/ChaofanLi/SXLNLP/assets/162019957/eec5cba4-7b91-4091-b77d-eee7c48a2864)
 
 
 ## 2024.06.26 week1
