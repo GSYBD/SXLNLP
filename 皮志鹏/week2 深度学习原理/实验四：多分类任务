@@ -1,0 +1,132 @@
+'''
+实验四：
+完成一个三分类任务：输入六个数，输出三个数（对应三类的概率值）。输入的前三个数之和为a,后三个数之和为b，a>b 是第一类， a<b是第二类，a=b是第三类。
+'''
+
+import torch
+import torch.nn as nn
+import matplotlib.pyplot as pyplot
+import numpy as np
+
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" 
+
+# 步骤：拿数据、分轮分批次训练、每一轮做一次模型测试（保存准确率和平均损失）、画图
+def main():
+    dataset_size = 1000  #   样本总数
+    epochs = 200 #   训练轮数
+    batch_size = 20 #   每个批次数据量
+    x_train,y_train = create_dataset(dataset_size)
+    epochs_loss = []    #   保存每一轮的损失
+    accuracy_rates = [] #   保存每一轮的准确率
+    batchs = dataset_size //batch_size  #   每一轮有多少个批次
+
+    learning_rate = 0.001
+    model = TorchModel(6,3)  
+    optim = torch.optim.Adam(model.parameters(),lr=learning_rate)
+
+    for epoch in range(epochs):
+        model.train()        
+        epoch_loss = 0
+        for batch_number in range(batchs):
+            x = x_train[batch_number * batch_size : (batch_number+1) * batch_size]
+            y = y_train[batch_number * batch_size : (batch_number+1) * batch_size]
+            
+            loss = model.forward(x,y)   #调用模型得到预测值
+            loss.backward()     #根据预测值和损失函数的偏导计算梯度
+            optim.step()        # 根据优化器更新参数
+            optim.zero_grad()
+
+            epoch_loss += loss.item()
+        #保存一轮训练的平均损失
+        epoch_loss /= batchs
+        epochs_loss.append(epoch_loss)
+        #测试模型，保存准确率
+        accuracy_rate = evaluate(model)
+        accuracy_rates.append(accuracy_rate)
+        print(f"第{epoch}轮训练，损失{epoch_loss}，准确率{accuracy_rate}")
+    #所有轮训练完成，画图：loss和acc关于轮次的变化图
+    pyplot.plot(range(len(epochs_loss)),accuracy_rates,label="accuracy_rate")
+    pyplot.plot(range(len(epochs_loss)),epochs_loss,label="epochs_loss")
+    pyplot.show()
+    # 保存模型参数
+    torch.save(model.state_dict(),"model.pt")
+
+def create_dataset(dataset_size):
+    X,Y = [],[]
+    for i in range(dataset_size):
+        x = np.random.rand(6)
+        a = sum(x[0:3])
+        b = sum(x[3:6])
+        if a>b:
+            y=0
+        elif a<b:
+            y=1
+        else:
+            y=2
+        X.append(x)
+        Y.append(y)
+    return torch.FloatTensor(X),torch.LongTensor(Y)   
+class TorchModel(nn.Module):
+    def __init__(self,input_size,output_size):
+        super(TorchModel,self).__init__()
+        self.hidden1 = nn.Linear(input_size,6)
+        self.hidden2 = nn.Linear(6,output_size)
+        self.activate = torch.sigmoid       
+        self.loss = nn.CrossEntropyLoss()    
+
+    def forward(self,x,y=None):   
+        x = self.hidden1(x)
+        x = self.activate(x)
+        y_pred = self.hidden2(x)
+        y_pred = self.activate(y_pred)
+        if y == None:
+            return y_pred
+        else:
+            return self.loss(y_pred,y)
+
+    
+def evaluate(model):
+    model.eval()
+    x_test,y_test = create_dataset(100)
+    correct = 0
+    y_pred = []
+    with torch.no_grad():
+        # 得到模型输出值（三维）
+        y_pred_3d = model.forward(x_test)
+        # 输出值转换成类别编码0-2
+        for y in y_pred_3d:
+            probability = max(y)
+            for i in range(3):
+                if y[i] == probability:
+                    y_pred.append(i)
+                    break
+        # 统计正确个数
+        for i in range(100):
+            if y_test[i] == y_pred[i]:
+                correct += 1
+    return correct/100
+
+
+def test(model):
+    x_test,y_test = create_dataset(5)
+    with torch.no_grad():
+        for j in range(len(x_test)):    
+            # 得到模型输出值（三维）
+            y_pred_3d = model.forward(x_test[j])
+            # 输出值转换成类别编码0-2
+            probability = max(y_pred_3d)
+            for i in range(3):
+                if y_pred_3d[i] == probability:
+                    y_pred = i
+                    break
+            print(f"输入值：{x_test[j]} 输出值：{y_pred_3d} 前三数和：{sum(x_test[j][0:3])} 后三数和：{sum(x_test[j][3:6])} 预测类别：{y_pred}  真实类别：{y_test[j]}")
+    print(model.state_dict())
+
+if __name__ == "__main__":  
+     main()
+   #  model = TorchModel(6,3)
+   #  model.load_state_dict(torch.load("model.pt"))
+   #  model.eval()
+   #  test(model)
+
