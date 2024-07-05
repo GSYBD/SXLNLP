@@ -50,15 +50,17 @@ class TorchModel(nn.Module):
     def __init__(self, charts, data_size, hidden_size,):
         super(TorchModel, self).__init__()
         self.embadding = nn.Embedding(len(charts), data_size, padding_idx=0)
-        self.layer = nn.RNN(data_size, hidden_size, bias=False, batch_first=True)
+        self.rnn = nn.RNN(data_size, data_size, bias=False, batch_first=True)
+        self.layer = nn.Linear(data_size, hidden_size)
         self.loss = nn.CrossEntropyLoss()
 
 
     def forward(self, x, y=None):
         # x是 20 * 10
         input = self.embadding(x) # 20 * 10 * 5
-        _, rnn_output = self.layer(input) # 20 * 10 * 4
+        _, rnn_output = self.rnn(input) # 20 * 10 * 5
         rnn_output = rnn_output.squeeze(0)
+        rnn_output = self.layer(rnn_output) # 20 * 10 * 4
         if y is not None:
             return self.loss(rnn_output, y)
         else:
