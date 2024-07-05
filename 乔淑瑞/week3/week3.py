@@ -32,7 +32,9 @@ class TorchModel(nn.Module):
         x = x.transpose(1, 2)  # (batch_size, sen_len, vector_dim) -> (batch_size, vector_dim, sen_len)
         x = self.pool(x)  # (batch_size, vector_dim, sen_len)->(batch_size, vector_dim, 1)
         x = x.squeeze()  # (batch_size, vector_dim, 1) -> (batch_size, vector_dim)
-        x = self.layer(x)[0]  # (batch_size, vector_dim) -> (batch_size, 1) 3*5 5*1 -> 3*1
+        # rnn_output, _ = self.layer(x)
+        # x = rnn_output.squeeze(1)
+        x = self.layer(x)[0]
         print(x, type(x))
         x = self.dropout(x)
         y_pred = self.activation(x)  # (batch_size, 1) -> (batch_size, 1)
@@ -43,11 +45,12 @@ class TorchModel(nn.Module):
 
 
 def build_vocab():
-    chars = "1234567890"  # 字符集
+    chars = "1234567890你好"  # 字符集
     vocab = {"pad": 0}
     for index, char in enumerate(chars):
         vocab[char] = index + 1  # 每个字对应一个序号
-    vocab['unk'] = len(vocab)  # 10
+    vocab['unk'] = len(vocab)  # 11
+    # print("vocab", vocab)
     return vocab
 
 
@@ -58,7 +61,7 @@ def build_sample(vocab, sentence_length):
     # 随机从字表选取sentence_length个字，可能重复
     x = [random.choice(list(vocab.keys())) for _ in range(sentence_length)]
     # 指定哪些字出现时为正样本
-    if set("135") & set(x):
+    if set("你好") & set(x):
         y = 1
     # 指定字都未出现，则为负样本
     else:
@@ -166,6 +169,6 @@ def predict(model_path, vocab_path, input_strings):
 
 
 if __name__ == "__main__":
-    ## main()
-    test_strings = ["123456", "954781", "154230", "607892"]
+    # main()
+    test_strings = ["123456", "954781", "465230", "60734你"]
     predict("model.pth", "vocab.json", test_strings)
