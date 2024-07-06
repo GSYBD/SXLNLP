@@ -80,12 +80,14 @@ def evaluate(model):
 class MultiClassficationModel(nn.Module):
     def __init__(self, input_size):
         super(MultiClassficationModel, self).__init__()
+        self.bn = torch.nn.BatchNorm1d(N)
         self.linear = nn.Linear(input_size, N + 1)  # 线性层 一共有N+1种分类
         self.activation = nn.Softmax(dim=1)
         self.loss = nn.functional.cross_entropy  # loss函数采用交叉熵损失
 
     # 当输入真实标签，返回loss值；无真实标签，返回预测值
     def forward(self, x, y=None):
+        x = self.bn(x)
         y_pred = self.linear(x)
         y_pred = self.activation(y_pred)
         if y is not None:
