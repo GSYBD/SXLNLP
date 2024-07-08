@@ -1,5 +1,12 @@
 # 李超凡的课后作业
 
+## 2024.07.08 week4
+    1. total_segmentation_combination.py:作业，递归实现全切分并获取所有正确分词组合 √
+    2. sbornn.py:手写课上RNN分词 √
+    3. new_words_detected.py:基于凝聚度和左右熵的新词发现 √
+    4.  tfidf_search_engine.py:基于TF_IDF的搜索引擎实现
+
+
 ## 2024.07.04 week3
     1. 运行课堂老师作业案例 √
     2. 参考课上案例，收集新闻标题分类数据集，使用simple rnn实现新闻标题分类 √
