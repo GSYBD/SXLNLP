@@ -1,4 +1,4 @@
-# week3作业
+
 
 # 词典；每个词后方存储的是其词频，词频仅为示例，不会用到，也可自行修改
 Dict = {"经常": 0.1,
@@ -58,3 +58,9 @@ if __name__ == '__main__':
     results = all_cut(sentence, Dict, None, None)
     for re in results:
         print(re)
+    print("----------")
+    # 根据词频，计算最大的输出
+    res_dict = {index: sum([Dict[char] for char in cut_word]) for index, cut_word in enumerate(results)}
+    # 排序
+    sorted_val = sorted([(index, sum_val) for index, sum_val in res_dict.items()], key=lambda x: x[1], reverse=True)
+    print(results[sorted_val[0][0]])
