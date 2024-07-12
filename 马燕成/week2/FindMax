@@ -1,0 +1,77 @@
+import torch
+import torch.nn as nn
+import numpy as np
+
+
+class TModel(nn.Module):
+    def __init__(self, input_size):
+        super(TModel, self).__init__()
+        self.linear1 = nn.Linear(input_size, 5)
+        self.softmax = torch.softmax
+        self.loss = nn.CrossEntropyLoss()  # 使用交叉滴损失函数
+
+    # 预期值
+    def forward(self, x, y=None):
+        x = self.linear1(x)  # (batch_size, input_size) -> (batch_size, 1
+        #y_pred = self.softmax(x1)  # (batch_size, 1) -> (batch_size, 1)
+        if y is None:
+            return x # 预测值和真实值计算损失
+        else:
+            return self.loss(x, y) # 输出预测结果
+
+
+# 生成样本
+def build_sample():
+    x = np.random.random(5)
+    y = np.zeros(5)
+    for i, t in enumerate(x):
+        if t == np.max(x):
+            y[i] = 1
+    return x, y
+
+
+def build_sample_data(num):
+    X = np.zeros((num,5))
+    Y = np.zeros((num,5))
+    for i in range(num):
+        x, y = build_sample()
+        X[i] = x
+        Y[i] = y
+    return X, Y
+
+
+def main():
+    # 配置参数
+    epoch_num = 20  # 训练轮数
+    batch_size = 20  # 每次训练样本个数
+    train_sample = 100000  # 每轮训练总共训练的样本总数
+    input_size = 5  # 输入向量维度
+    learning_rate = 0.001  # 学习率
+    # 建立模型
+    model = TModel(input_size)
+    # 选择优化器
+    optim = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    log = []
+    # 创建训练集，正常任务是读取训练集
+    train_x, train_y = build_sample_data(train_sample)
+    # 训练过程
+    for epoch in range(epoch_num):
+        model.train()
+        watch_loss = []
+        for batch_index in range(train_sample // batch_size):
+            x = train_x[batch_index * batch_size: (batch_index + 1) * batch_size]
+            y = train_y[batch_index * batch_size: (batch_index + 1) * batch_size]
+            loss = model(torch.from_numpy(x).float(), torch.from_numpy(y).float())  # 计算loss
+            loss.backward()  # 计算梯度
+            optim.step()  # 更新权重
+            optim.zero_grad()  # 梯度归零
+            watch_loss.append(loss.item())
+        print("=========\n第%d轮平均loss:%f" % (epoch + 1, np.mean(watch_loss)))
+
+        log.append([float(np.mean(watch_loss))])
+    # 保存模型
+    torch.save(model.state_dict(), "model1.pt")
+
+
+if __name__ == "__main__":
+    main()
