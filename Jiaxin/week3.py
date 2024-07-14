@@ -17,14 +17,18 @@ class TorchModel(nn.Module):
         super(TorchModel, self).__init__()
         self.embedding = nn.Embedding(len(vocab),vector_dim)  # embedding层
         self.layer = nn.RNN(vector_dim,sentence_length, bias=False, batch_first=True)
-        self.classify = nn.Linear(sentence_length,1)  # 线性层
+        self.classify = nn.Linear(sentence_length,sentence_length)  # 线性层
         self.loss = nn.CrossEntropyLoss()  # loss函数采用交叉熵
 
     # 当输入真实标签 返回loss值 无真实标签，返回预测值
     def forward(self, x, y=None):
         x = self.embedding(x)   # (batch_size, sen_len) -> (batch_size,sen_len,vector_dim)
-        output,h = self.layer(x)  # (batch_size, sen_len,vector_dim) -> (batch_size,sen_len,vector_dim)
-        y_pred = self.classify(output)
+        output,h = self.layer(x) # (batch_size, sen_len,vector_dim) -> (batch_size,sen_len,vector_dim)
+        x = output[:,-1,:]
+        print(x,output)
+        y_pred = self.classify(x)
+
+        # print(y,y_pred)
         if y is not None:
             return self.loss(y_pred, y)  # 预测值和真实值的比较
         else:
@@ -83,7 +87,7 @@ def build_dataset(sample_length, vocab, sentence_length):
     for i in range(sample_length):
         x, y = build_sample(vocab, sentence_length)
         dataset_x.append(x)
-        dataset_y.append([y])
+        dataset_y.append(y)
     return torch.LongTensor(dataset_x), torch.LongTensor(dataset_y)
 
 
@@ -97,7 +101,7 @@ def build_model(vocab, char_dim, sentence_length):
 # 用来测试每轮模型的准确率
 def evaluate(model, vocab, sentence_length):
     model.eval()
-    x, y = build_dataset(2, vocab, sentence_length)  # 建立200个用于测试的样本
+    x, y = build_dataset(200, vocab, sentence_length)  # 建立200个用于测试的样本
     correct, wrong = 0, 0
     with torch.no_grad():
         y_pred = model(x)
@@ -113,7 +117,7 @@ def evaluate(model, vocab, sentence_length):
 def main():
     # 配置参数
     epoch_num = 20  # 训练轮数
-    batch_size = 30  # 每次训练样本个数
+    batch_size = 1  # 每次训练样本个数
     train_sample = 500  # 每轮训练总共训练的样本总数
     char_dim = 20  # 每个字的纬度
     sentence_length = 6  # 样本的文本长度
@@ -180,4 +184,3 @@ if __name__ == "__main__":
     main()
     test_strings = ["fnvf你e", "wa你dfg", "你qwdeg", "nakww你"]
     predict("model.pth", "vocab.json", test_strings)
-
