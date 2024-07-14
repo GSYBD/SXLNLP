@@ -13,15 +13,13 @@ class TorchModel(nn.Module):
         self.embedding = nn.Embedding(len(vocab),vector_dim)
         self.layer = nn.RNN(vector_dim,hidden_size,batch_first=True)
         self.classify = nn.Linear(10,6)
-        self.activation = torch.softmax
         self.loss = nn.functional.cross_entropy
     
     def forward(self,x,y = None):
         x = self.embedding(x)
         _,out = self.layer(x)
         x = out.squeeze()
-        x = self.classify(x)
-        y_pred  = self.activation(x,dim=0)
+        y_pred = self.classify(x)
         if y is not None:
             return self.loss(y_pred,y)
         else:
@@ -74,7 +72,6 @@ def evaluate(model):
     with torch.no_grad():
         y_pred = model(x)
         for y_p, y_t in zip(y_pred,y):
-            print(y_p,y_t)
             if np.argmax(y_p) == np.argmax(y_t):
                 correct[np.argmax(y_t)] += 1
             else:
@@ -154,13 +151,14 @@ def predict(model_path,input_vec):
 
 
 if __name__ == '__main__':
-    test = []
-    model_path = get_current_path('model.pt')
-    vocab_path = get_current_path('vocab.json')
-    vocab = load_vocab(vocab_path)
-    test.append(str2seq('abcde',vocab))
-    test.append(str2seq('aacde',vocab))
-    test.append(str2seq('vacre',vocab))
-    test.append(str2seq('rbcdc',vocab))
-    test.append(str2seq('ibcdx',vocab))
-    predict(model_path,test)
+    main()
+    # test = []
+    # model_path = get_current_path('model.pt')
+    # vocab_path = get_current_path('vocab.json')
+    # vocab = load_vocab(vocab_path)
+    # test.append(str2seq('abcde',vocab))
+    # test.append(str2seq('aacde',vocab))
+    # test.append(str2seq('vacre',vocab))
+    # test.append(str2seq('rbcdc',vocab))
+    # test.append(str2seq('ibcdx',vocab))
+    # predict(model_path,test)
