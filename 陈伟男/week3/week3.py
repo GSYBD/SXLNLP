@@ -59,8 +59,8 @@ class TorchModel(nn.Module):
         # x是 20 * 10
         input = self.embadding(x) # 20 * 10 * 5
         _, rnn_output = self.rnn(input) # 20 * 10 * 5
-        rnn_output = rnn_output.squeeze(0)
-        rnn_output = self.layer(rnn_output) # 20 * 10 * 4
+        rnn_output = rnn_output.squeeze(0) # 20 * 5
+        rnn_output = self.layer(rnn_output) # 20 * 4
         if y is not None:
             return self.loss(rnn_output, y)
         else:
