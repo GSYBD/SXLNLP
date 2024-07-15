@@ -1,0 +1,28 @@
+def backtrack(start, path, target, wordDict, res):
+        if start == len(target):
+            res.append(' '.join(path))
+
+        for end in range(start + 1, len(target) + 1):
+            if target[start:end] in wordDict:
+                backtrack(end, path + [target[start:end]], target, wordDict, res)
+        return res
+
+target = "经常有意见分歧"
+Dict = {"经常":0.1,
+        "经":0.05,
+        "有":0.1,
+        "常":0.001,
+        "有意见":0.1,
+        "歧":0.001,
+        "意见":0.2,
+        "分歧":0.2,
+        "见":0.05,
+        "意":0.05,
+        "见分歧":0.05,
+        "分":0.1}
+
+result = []
+result = backtrack(0, [], target, Dict, result)
+
+for res in result:
+    print(res)

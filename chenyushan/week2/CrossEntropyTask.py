@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 
 基于pytorch框架编写模型训练
 实现一个自行构造的找规律(机器学习)任务
-规律：x是一个5维向量，如果5个数之和小于2，则为狗；[1,0,0]
-    大于3，则为虎，[0,1,0]
-    2和3之间为牛[0,0,1]
+规律：x是一个3维向量，如果3个数之和小于1，则为狗；[1,0,0]
+    大于2，则为虎，[0,1,0]
+    1和2之间为牛[0,0,1]
 """
 
 
@@ -21,13 +21,13 @@ class TorchModel(nn.Module):
     def __init__(self, input_size):
         super(TorchModel, self).__init__()
         self.linear = nn.Linear(input_size, 3)  # 线性层
-        self.activation = torch.sigmoid  # sigmoid归一化函数
-        self.loss = nn.functional.cross_entropy();  # loss函数采用均方差损失
+        # self.activation = torch.sigmoid   sigmoid归一化函数
+        self.loss = nn.functional.cross_entropy  # loss函数采用交叉熵损失
 
     # 当输入真实标签，返回loss值；无真实标签，返回预测值
     def forward(self, x, y=None):
-        x = self.linear(x)  # (batch_size, input_size) -> (batch_size, 1)
-        y_pred = self.activation(x)  # (batch_size, 1) -> (batch_size, 1)
+        y_pred = self.linear(x)  # (batch_size, input_size) -> (batch_size, 1)
+       # y_pred = self.activation(x)  # (batch_size, 1) -> (batch_size, 1)
         if y is not None:
             return self.loss(y_pred, y)  # 预测值和真实值计算损失
         else:
@@ -35,17 +35,17 @@ class TorchModel(nn.Module):
 
 
 # 生成一个样本, 样本的生成方法，代表了我们要学习的规律
-# 随机生成一个5维向量，如果第一个值大于第五个值，认为是正样本，反之为负样本
+# 随机生成一个3维向量，如果三个数之和，大于2就是虎，大于1小于2是牛，小于1是狗
 def build_sample():
     x = np.random.random(3)
-    s = x[0] +x[1]+x[2]
+    s = x[0] + x[1] + x[2]
 
-    if s>2:
-        return x, [0,1,0]
-    elif s<1:
-        return x,[1,0,0]
+    if s > 2:
+        return x, 1
+    elif s < 1:
+        return x, 0
     else:
-        return x, [0,0,1]
+        return x, 2
 
 
 # 随机生成一批样本
@@ -56,8 +56,8 @@ def build_dataset(total_sample_num):
     for i in range(total_sample_num):
         x, y = build_sample()
         X.append(x)
-        Y.append([y])
-    return torch.FloatTensor(X), torch.FloatTensor(Y)
+        Y.append(y)
+    return torch.FloatTensor(X), torch.LongTensor(Y)
 
 
 # 测试代码
@@ -66,14 +66,11 @@ def evaluate(model):
     model.eval()
     test_sample_num = 100
     x, y = build_dataset(test_sample_num)
-    print("本次预测集中共有%d个正样本，%d个负样本" % (sum(y), test_sample_num - sum(y)))
     correct, wrong = 0, 0
     with torch.no_grad():
         y_pred = model(x)  # 模型预测
         for y_p, y_t in zip(y_pred, y):  # 与真实标签进行对比
-            y_p_v = y_p.index(max(y_p))
-            y_t_v = y_t.index(max(y_t))
-            if y_p_v == y_t_v:
+            if torch.argmax(y_p) == int(y_t):
                 correct += 1  # 如果概率最大的是同一个位置的数，则预测准确
             else:
                 wrong += 1
@@ -90,12 +87,14 @@ def main():
     learning_rate = 0.001  # 学习率
     # 建立模型
     model = TorchModel(input_size)
+    print("执行到这一步了吗？")
     # 选择优化器
     optim = torch.optim.Adam(model.parameters(), lr=learning_rate)
     log = []
     # 创建训练集，正常任务是读取训练集
     train_x, train_y = build_dataset(train_sample)
     # 训练过程
+    print("执行到这一步了吗？")
     for epoch in range(epoch_num):
         model.train()
         watch_loss = []
@@ -132,13 +131,13 @@ def predict(model_path, input_vec):
     with torch.no_grad():  # 不计算梯度
         result = model.forward(torch.FloatTensor(input_vec))  # 模型预测
     for vec, res in zip(input_vec, result):
-        print("输入：%s, 预测类别：%d, 概率值：%f" % (vec, round(float(res)), res))  # 打印结果
+        print("输入：%s, 预测类别：%s, 概率值：%s" % (vec, torch.argmax(res), res))  # 打印结果
 
 
 if __name__ == "__main__":
-    main()
-    # test_vec = [[0.07889086,0.15229675,0.31082123,0.03504317,0.18920843],
-    #             [0.94963533,0.5524256,0.95758807,0.95520434,0.84890681],
-    #             [0.78797868,0.67482528,0.13625847,0.34675372,0.19871392],
-    #             [0.79349776,0.59416669,0.92579291,0.41567412,0.1358894]]
-    # predict("model.pt", test_vec)
+    # main()
+    test_vec = [[0.07889086,0.15229675,0.31082123],
+                [0.94963533,0.5524256,0.95758807],
+                [0.78797868,0.67482528,0.13625847],
+                [0.79349776,0.59416669,0.92579291]]
+    predict("model.pt", test_vec)
