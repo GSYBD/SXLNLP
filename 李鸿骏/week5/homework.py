@@ -61,12 +61,12 @@ def main():
         sentence_label_dict[label].append(sentence)  # 同标签的放到一起
         vectors_label_dict[label].append(vector)
     # 计算每个标签的类内平均距离
-    centers = kmeans.cluster_centers_
+    centers = kmeans.cluster_centers_  # 获取所有类别的中心向量
     avg_distance_label_dict = {}
     for i in range(n_clusters):
-        center_vector = centers[i]
-        vectors_label = vectors_label_dict[i]
-        avg_distance = np.mean([np.linalg.norm(center_vector - v) for v in vectors_label])
+        center_vector = centers[i]  # 获取第i个标签的中心向量
+        vectors_label = vectors_label_dict[i]  # 获取第i个标签的所有向量
+        avg_distance = np.mean([np.linalg.norm(center_vector - v) for v in vectors_label])  # 计算第i个标签的类内平均向量距离
         print("cluster %s 类内平均距离：" % i, avg_distance)
         avg_distance_label_dict[i] = avg_distance
     # 对标签的类内平均距离进行排序
