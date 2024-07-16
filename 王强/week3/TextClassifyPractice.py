@@ -18,7 +18,8 @@ class TextMulitClassifyModel(nn.Module):
     def __init__(self, vector_dim, sentence_length, vocab, num_classes):
         super(TextMulitClassifyModel, self).__init__()
         self.embedding = nn.Embedding(len(vocab), vector_dim)  #embedding层
-        self.pool = nn.AvgPool1d(sentence_length)   #池化层
+        #todo:这里比较坑，如果经过池化层会把文本顺序信息给丢失(例如abc和bac经过池化处理后都是一样的，但是顺序信息其实丢失了)，导致准确率很低
+        # self.pool = nn.AvgPool1d(sentence_length)   #池化层
         self.classify = nn.RNN(vector_dim, num_classes, bias=False, batch_first=True)     #RNN层
         self.dp_layer = nn.Dropout(0.5)
         self.bn = nn.BatchNorm1d(num_classes)
@@ -27,13 +28,16 @@ class TextMulitClassifyModel(nn.Module):
     #当输入真实标签，返回loss值；无真实标签，返回预测值
     def forward(self, x, y=None):
         x = self.embedding(x)                      #(batch_size, sen_len) -> (batch_size, sen_len, vector_dim)
-        x = x.transpose(1, 2)                      #(batch_size, sen_len, vector_dim) -> (batch_size, vector_dim, sen_len)
-        x = self.pool(x)                           #(batch_size, vector_dim, sen_len)->(batch_size, vector_dim, 1)
-        x = x.squeeze()                            #(batch_size, vector_dim, 1) -> (batch_size, vector_dim)
+        # print("x shape is:{}".format(x.shape))
+        # x = x.transpose(1, 2)                      #(batch_size, sen_len, vector_dim) -> (batch_size, vector_dim, sen_len)
+        # x = self.pool(x)                           #(batch_size, vector_dim, sen_len)->(batch_size, vector_dim, 1)
+        # x = x.squeeze()                            #(batch_size, vector_dim, 1) -> (batch_size, vector_dim)
         # x = self.dp_layer(x)
-        # 这里需要注意RNN层输出的是一个元祖(output, hidden)
-        output,hidden = self.classify(x)          #(batch_size, vector_dim) -> ((batch_size, num_classes),(,num_classes))
+        # 这里需要注意RNN层输出的是一个元组(output, hidden)
+        output,hidden = self.classify(x)          #(batch_size, sen_len, vector_dim) -> ((batch_size, sen_len, num_classes),(1,batch_size, sen_len))
         # print("output shape is:{}, hidden shape is:{}".format(output.shape, hidden.shape))
+        output = output[:, -1, :]
+        # print("out put shape is:{}".format(output.shape))
         # y_pred = self.dp_layer(output)
         # y_pred = self.bn(output)
         y_pred = output
@@ -108,7 +112,7 @@ def main():
     epoch_num = 20        #训练轮数
     batch_size = 20       #每次训练样本个数
     train_sample = 500    #每轮训练总共训练的样本总数
-    char_dim = 20         #每个字的维度
+    char_dim = 25         #每个字的维度
     sentence_length = 6   #样本文本长度
     num_classes = sentence_length #类别个数
     learning_rate = 0.005 #学习率
@@ -151,7 +155,7 @@ def main():
 
 #使用训练好的模型做预测
 def predict(model_path, vocab_path, input_strings):
-    char_dim = 20  # 每个字的维度
+    char_dim = 25  # 每个字的维度
     sentence_length = 6  # 样本文本长度
     num_classes = sentence_length #预测分类数
     vocab = json.load(open(vocab_path, "r", encoding="utf8")) #加载字符表
