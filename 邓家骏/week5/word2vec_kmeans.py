@@ -66,13 +66,21 @@ def main():
         dist = np.linalg.norm(vectors[idx] - kmeans.cluster_centers_[label]) 
         sentence_label_dict[label].append([sentence,dist])         #同标签的放到一起
 
+    # 每个标签内文本做距离排序，asc
     for label, sentences in sentence_label_dict.items():
         sentences.sort(key=lambda subarray : subarray[1])
-        print("cluster %s :" % label)
-        for i in range(min(10, len(sentences))):  #打印最接近的前10个
-            print(sentences[i][0].replace(" ", ""),' 距离：',sentences[i][1])
-        print("---------")
+        sentence_label_dict[label] = [sentences,np.mean([sentence[1] for sentence in sentences])]
 
+    # 对每个标签所有文本的距离求均值，再排序，asc。以便找出相似度高的分类
+    sorted_items = sorted(sentence_label_dict.items(),key=lambda item: item[1][1])
+
+
+    for i in range(10):
+        print('当前分类：',sorted_items[i][0])
+        print('当前分类，所有文本到中心点距离均值：',sorted_items[i][1][1])
+        for idx in range(min(10,len(sorted_items[i][1][0]))):
+            print(sorted_items[i][1][0][idx][0].replace(' ',''),'距离：',sorted_items[i][1][0][idx][1])
+        print('--------------------------')
 if __name__ == "__main__":
     main()
 
