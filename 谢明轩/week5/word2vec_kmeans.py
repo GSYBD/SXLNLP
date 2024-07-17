@@ -74,7 +74,7 @@ def main():
     sorted_distanceDict = sorted(distanceDict.items(), key=lambda x: x[1])
     print("聚类中心距离排序：", sorted_distanceDict)
     top_ten_keys = [item[0] for item in sorted_distanceDict[:10]]
-    #######################################################################
+    #########################################################################################
     sentence_label_dict = defaultdict(list)
     for sentence, label in zip(sentences, kmeans.labels_):  #取出句子和标签
         sentence_label_dict[label].append(sentence)         #同标签的放到一起
