@@ -1,0 +1,47 @@
+详细解释每一行代码的作用：
+def all_cut(sentence, Dict):
+
+定义 all_cut 函数，接受两个参数：sentence（待切分的文本）和 Dict（词典）。
+def backtrack(start):
+
+定义一个内部函数 backtrack，用于递归生成所有可能的切分组合。start 参数表示当前处理的字符位置。
+if start == len(sentence):
+
+如果 start 等于 sentence 的长度，说明已经处理完整个句子。
+results.append(list(current))
+
+将当前的切分组合（current）复制一份并添加到结果列表（results）中。
+return
+
+结束当前的递归调用。
+for end in range(start + 1, len(sentence) + 1):
+
+从 start 位置开始，尝试所有可能的切分位置。end 表示当前尝试的词的结束位置。
+word = sentence[start:end]
+
+获取当前尝试的词（从 start 到 end）。
+if word in Dict:
+
+如果这个词在词典中。
+current.append(word)
+
+将这个词添加到当前的切分组合（current）中。
+backtrack(end)
+
+递归调用 backtrack，处理下一个词的起始位置（end）。
+current.pop()
+
+回溯，移除刚刚添加的词，以便尝试其他可能的切分组合。
+results = []
+
+初始化结果列表，用于存储所有可能的切分组合。
+current = []
+
+初始化当前的切分组合，用于在递归过程中存储临时的切分结果。
+backtrack(0)
+
+从句子的起始位置（0）开始调用 backtrack 函数。
+return results
+
+返回所有可能的切分组合。
+通过这些步骤，all_cut 函数能够生成并返回所有可能的切分组合。
