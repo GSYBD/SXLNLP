@@ -72,7 +72,7 @@ def main():
         direction_to_center_sum = 0
         for direction in directions:
             direction_to_center_sum += embedding_distance(direction, kmeans.cluster_centers_[labels])
-        direction_to_center_avg = direction_to_center_sum / len(kmeans.cluster_centers_[labels])
+        direction_to_center_avg = direction_to_center_sum / len(directions)
         direction_to_center_avg_dict[labels] = direction_to_center_avg
     # print(direction_to_center_avg_dict)
 
