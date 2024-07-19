@@ -1,178 +1,201 @@
+# Import
 import torch
 import torch.nn as nn
-import jieba
 import numpy as np
 import random
 import json
-from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
 
 """
-基于pytorch的网络编写一个分词模型
-我们使用jieba分词的结果作为训练数据
-看看是否可以得到一个效果接近的神经网络模型
-LSTM/GRU VS RNN
+模型一：简单的npl多分类任务（线性层+交叉熵）
+模型二：简单的npl多分类任务（RNN+交叉熵）
+实现一个网络完成一个简单nlp任务
+判断文本中是否有某些特定字符出现
 """
-class Dataset:
-    def __init__(self, corpus_path, vocab, max_length):
-        self.vocab = vocab
-        self.corpus_path = corpus_path
-        self.max_length = max_length
-        self.load()
-
-    def load(self):
-        self.data = []
-        with open(self.corpus_path, encoding="utf8") as f:
-            for line in f:
-                sequence = sentence_to_sequence(line, self.vocab)
-                label = sequence_to_label(line)
-                sequence, label = self.padding(sequence, label)
-                sequence = torch.LongTensor(sequence)
-                label = torch.LongTensor(label)
-                self.data.append([sequence, label])
-                #使用部分数据做展示，使用全部数据训练时间会相应变长
-                if len(self.data) > 10000:
-                    break
-
-    #将文本截断或补齐到固定长度
-    def padding(self, sequence, label):
-        sequence = sequence[:self.max_length]
-        sequence += [0] * (self.max_length - len(sequence)) #对sequence 补0
-        label = label[:self.max_length]
-        label += [-100] * (self.max_length - len(label)) #给padding位置的label一个负数 区分real label e.g -100
-        return sequence, label
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, item):
-        return self.data[item]
-
-#文本转化为数字序列，为embedding做准备
-def sentence_to_sequence(sentence, vocab):
-    sequence = [vocab.get(char, vocab['unk']) for char in sentence]
-    return sequence
-
-#基于结巴生成分级结果的标注
-def sequence_to_label(sentence):
-    words = jieba.lcut(sentence)
-    label = [0] * len(sentence)
-    pointer = 0
-    for word in words:
-        pointer += len(word)  #是否是词的后边界
-        label[pointer - 1] = 1
-    return label
-
-#加载字表
-def build_vocab(vocab_path):
+#数据生成
+def build_vocab():
+    chars = "abcdefghijklmnopqrstuvwxyz你我他好再见"  #字符集
     vocab = {}
-    with open(vocab_path, "r", encoding="utf8") as f:
-        for index, line in enumerate(f):
-            char = line.strip()
-            vocab[char] = index + 1   #每个字对应一个序号 留出0 对应padding
-    vocab['unk'] = len(vocab) + 1
+    for index, char in enumerate(chars):
+        vocab[char] = index   #每个字对应一个序号
+    vocab['unk'] = len(vocab)
     return vocab
 
+#随机生成一个样本 #从所有字中选取sentence_length个字
+#反之为负样本
+
+def to_one_hot_vec(target,cate_cnt):
+    one_hot_target = [0]*cate_cnt
+    one_hot_target[target] = 1
+    return one_hot_target
+
+
+def build_sample(vocab, sentence_length):
+    #随机从字表选取sentence_length个字，可能重复
+    x = [random.choice(list(vocab.keys())) for _ in range(sentence_length)]
+    #指定哪些字出现时为正样本
+    contains_english = bool(set("abc") & set(x))
+    contains_chinese = bool(set("你我他") & set(x))
+
+    if contains_english and contains_chinese:
+        y = 2 #同时包含a/b/c 和 你/我/他
+    elif contains_english:
+        y = 0 #只包含a/b/c
+    elif contains_chinese:
+        y = 1 #只包含你/我/他
+    else:
+        y = 3 #不包含a/b/c/你/我/他
+    x = [vocab.get(word, vocab['unk']) for word in x]
+    y = to_one_hot_vec(y,4)
+    return x,y
+
 #建立数据集
-def build_dataset(corpus_path, vocab, max_length, batch_size):
-    dataset = Dataset(corpus_path, vocab, max_length) #diy __len__ __getitem__
-    data_loader = DataLoader(dataset, shuffle=True, batch_size=batch_size) #torch
-    return data_loader
-
-
-class TorchModel(nn.Module):
-    def __init__(self, input_dim, hidden_size, num_set_layers, vocab):
-        super(TorchModel, self).__init__()
-        self.embedding = nn.Embedding(len(vocab) + 1, input_dim) #shape=(vocab_size, dim)
-        #self.rnn_layer = nn.RNN(input_size=input_dim,
-                            #hidden_size=hidden_size,
-                            #batch_first=True,
-                            #num_layers=num_set_layers,
-                            #)
-        self.lstm_layer = nn.LSTM(input_dim, hidden_size, batch_first=True,num_layers=num_set_layers)
-        #self.gru_layer = nn.GRU(input_dim, hidden_size, batch_first=True,num_layers=num_set_layers)
-        self.classify = nn.Linear(hidden_size, 2)
-        self.loss_func = nn.CrossEntropyLoss(ignore_index=-100)
+#输入需要的样本数量。需要多少生成多少
+def build_dataset(sample_length, vocab, sentence_length):
+    dataset_x = []
+    dataset_y = []
+    for i in range(sample_length):
+        x, y = build_sample(vocab, sentence_length)
+        dataset_x.append(x)
+        dataset_y.append(y)
+    return torch.LongTensor(dataset_x), torch.FloatTensor(dataset_y)
+#建立模型
+class TorchModel_linear(nn.Module):
+    def __init__(self, vector_dim, sentence_length, vocab):
+        super(TorchModel_linear, self).__init__()
+        self.embedding = nn.Embedding(len(vocab), vector_dim)  #embedding层
+        self.pool = nn.AvgPool1d(sentence_length)   #池化层
+        self.classify = nn.Linear(vector_dim, 4)     #线性层 out_feature = 分类个数
+        self.loss = nn.CrossEntropyLoss()  #loss函数采用交叉熵 cross entropy包含了softmax
+        self.activation = nn.functional.softmax
 
     #当输入真实标签，返回loss值；无真实标签，返回预测值
     def forward(self, x, y=None):
-        x = self.embedding(x)  #input shape: (batch_size, sen_len), output shape:(batch_size, sen_len, input_dim)
-        #x, _ = self.rnn_layer(x)  #output shape:(batch_size, sen_len, hidden_size)
-        x, _ =  self.lstm_layer(x)
-        x,_ = self.gru_layer(x)
-        y_pred = self.classify(x)   #output shape:(batch_size, sen_len, 2)
+        x = self.embedding(x)                      #(batch_size, sen_len) -> (batch_size, sen_len, vector_dim)
+        x = self.pool(x.transpose(1, 2)).squeeze() #(batch_size, sen_len, vector_dim) -> (batch_size, vector_dim)
+        y_pred = self.classify(x)                       #(batch_size, vector_dim) -> (batch_size, 4)
+        #y_pred = self.activation(x,dim = 1)                #(batch_size, 4) -> (batch_size, 4)
         if y is not None:
-            # view(-1,2): (batch_size, sen_len, 2) ->  (batch_size * sen_len, 2)
-            return self.loss_func(y_pred.view(-1, 2), y.view(-1))
+            return self.loss(y_pred, y)   #预测值和真实值计算损失
         else:
-            return y_pred
+            return self.activation(y_pred,dim = 1)               #输出预测结果
 
-#建立数据集
-def build_dataset(corpus_path, vocab, max_length, batch_size):
-    dataset = Dataset(corpus_path, vocab, max_length) #diy __len__ __getitem__
-    data_loader = DataLoader(dataset, shuffle=True, batch_size=batch_size) #torch
-    return data_loader
+class TorchModel_rnn(nn.Module):
+    def __init__(self, vector_dim,hidden_size,sentence_length,vocab):
+        super(TorchModel_rnn, self).__init__()
+        self.embedding = nn.Embedding(len(vocab), vector_dim)  #embedding层
+        self.rnn = nn.RNN(vector_dim,hidden_size,batch_first=True)
+        self.pool = nn.AvgPool1d(sentence_length)   #池化层
+        self.classify = nn.Linear(hidden_size, 4)     #线性层 out_feature = 分类个数
+        self.loss = nn.CrossEntropyLoss()  #loss函数采用交叉熵 cross entropy包含了softmax
+        self.activation = nn.functional.softmax
+
+    #当输入真实标签，返回loss值；无真实标签，返回预测值
+    def forward(self, x, y=None):
+        x = self.embedding(x)                      #(batch_size, sen_len) -> (batch_size, sen_len, vector_dim)
+        x,h = self.rnn(x)                       #(batch_size, sen_len, hidden_size)
+        #x = torch.squeeze(h) #取最后一个时间步作为特征表示 or pooling
+        x = self.pool(x.transpose(1, 2)).squeeze() #(batch_size, sen_len, hidden) -> (batch_size, hidden)
+        y_pred = self.classify(x)                       #(batch_size, vector_dim) -> (batch_size, 4)
+        #y_pred = self.activation(x,dim = 1)                #(batch_size, 4) -> (batch_size, 4)
+        if y is not None:
+            return self.loss(y_pred, y)   #预测值和真实值计算损失
+        else:
+            return self.activation(y_pred,dim = 1)               #输出预测结果
+
+
+#建立模型
+def build_model(vocab,char_dim,sentence_length,hidden_size,model_num = 1):
+    if model_num == 1:
+        model = TorchModel_linear(char_dim, sentence_length, vocab)
+    else:
+        model = TorchModel_rnn(char_dim,hidden_size,sentence_length,vocab)
+    return model
+
+#验证代码
+#用来验证每轮模型的准确率
+def evaluate(model, vocab, sample_length):
+    model.eval()
+    x, y = build_dataset(200, vocab, sample_length)   #建立200个用于验证的样本
+    print("本次预测集中样本的属于类别分布是",torch.sum(y,dim=0))
+    correct, wrong = 0, 0
+    with torch.no_grad():
+        y_pred = model(x)      #模型预测
+        for y_p, y_t in zip(y_pred, y):  #与真实标签进行对比
+            if torch.argmax(y_p).item() == torch.argmax(y_t).item():
+                correct +=1
+            else:
+                wrong += 1
+    print("正确预测个数：%d, 正确率：%f"%(correct, correct/(correct+wrong)))
+    return correct/(correct+wrong)
 
 
 def main():
-    epoch_num = 10        #训练轮数
+    #配置参数
+    epoch_num = 30        #训练轮数
     batch_size = 20       #每次训练样本个数
-    char_dim = 50         #每个字的维度
-    hidden_size = 30     #隐含层维度
-    num_rnn_layers = 3    #rnn层数
-    max_length = 20       #样本最大长度
-    learning_rate = 1e-3  #学习率
-    vocab_path = "chars.txt"  #字表文件路径
-    corpus_path = "corpus.txt"  #语料文件路径
-    vocab = build_vocab(vocab_path)       #建立字表
-    data_loader = build_dataset(corpus_path, vocab, max_length, batch_size)  #建立数据集
-    model = TorchModel(char_dim, hidden_size, num_rnn_layers, vocab)   #建立模型
-    optim = torch.optim.Adam(model.parameters(), lr=learning_rate)     #建立优化器
-    #训练开始
+    train_sample = 1000    #每轮训练总共训练的样本总数
+    char_dim =5        #embedding层的维度
+    sentence_length = 10   #样本文本长度
+    learning_rate = 0.005 #学习率
+    # 建立字表
+    vocab = build_vocab()
+    # 建立模型
+    model = build_model(vocab, char_dim, sentence_length, hidden_size = 5, model_num=1)  # 1 - linear layer #2 - rnn layer
+    #model = build_model(vocab, char_dim, sentence_length,hidden_size = 5,model_num=2) #1 - linear layer #2 - rnn layer
+    # 选择优化器
+    optim = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    log = []
+    # 训练过程
     for epoch in range(epoch_num):
         model.train()
         watch_loss = []
-        for x, y in data_loader:
+        for batch in range(int(train_sample / batch_size)):
+            x, y = build_dataset(batch_size, vocab, sentence_length) #构造一组训练样本
             optim.zero_grad()    #梯度归零
             loss = model(x, y)   #计算loss
             loss.backward()      #计算梯度
             optim.step()         #更新权重
             watch_loss.append(loss.item())
         print("=========\n第%d轮平均loss:%f" % (epoch + 1, np.mean(watch_loss)))
+        acc = evaluate(model, vocab, sentence_length)   #测试本轮模型结果
+        log.append([acc, np.mean(watch_loss)])
+    #画图
+    plt.plot(range(len(log)), [l[0] for l in log], label="acc")  #画acc曲线
+    plt.plot(range(len(log)), [l[1] for l in log], label="loss")  #画loss曲线
+    plt.legend()
+    plt.xlabel('epoch')
+    plt.ylabel('value')
+    plt.show()
     #保存模型
     torch.save(model.state_dict(), "model.pth")
+    # 保存词表
+    writer = open("vocab.json", "w", encoding="utf8")
+    writer.write(json.dumps(vocab, ensure_ascii=False, indent=2))
+    writer.close()
     return
 
-#最终预测
+#使用训练好的模型做预测
 def predict(model_path, vocab_path, input_strings):
-    #配置保持和训练时一致
-    char_dim = 50  # 每个字的维度
-    hidden_size = 30  # 隐含层维度
-    num_set_layers = 3  # rnn层数
-    vocab = build_vocab(vocab_path)       #建立字表
-    model = TorchModel(char_dim, hidden_size, num_set_layers, vocab)   #建立模型
-    model.load_state_dict(torch.load(model_path))   #加载训练好的模型权重
-    model.eval()
+    char_dim = 5  # 每个字的维度
+    sentence_length = 10  # 样本文本长度
+    vocab = json.load(open(vocab_path, "r", encoding="utf8")) #加载字符表
+    #vocab = build_vocab() #加载字符表
+    model = build_model(vocab, char_dim, sentence_length, hidden_size=5, model_num=1)  # 建立模型1
+    #model = build_model(vocab, char_dim, sentence_length,hidden_size = 5,model_num=2)     #建立模型2
+    model.load_state_dict(torch.load(model_path))             #加载训练好的权重
+    x = []
     for input_string in input_strings:
-        #逐条预测
-        x = sentence_to_sequence(input_string, vocab)
-        with torch.no_grad():
-            result = model.forward(torch.LongTensor([x]))[0]
-            result = torch.argmax(result, dim=-1)  #预测出的01序列
-            #在预测为1的地方切分，将切分后文本打印出来
-            for index, p in enumerate(result):
-                if p == 1:
-                    print(input_string[index], end=" ")
-                else:
-                    print(input_string[index], end="")
-            print()
-
+        x.append([vocab.get(char,vocab['unk']) for char in input_string])  #将输入序列化
+    model.eval()   #测试模式
+    with torch.no_grad():  #不计算梯度
+        result = model.forward(torch.LongTensor(x))  #模型预测
+        out = torch.argmax(result, dim=1)
+    for i, input_string in enumerate(input_strings):
+        print('输入:',input_string,'预测类别：', out[i].numpy(),'概率：', result[i].numpy())#打印结果
 
 
 if __name__ == "__main__":
     main()
-    input_strings = ["同时国内有望出台新汽车刺激方案",
-                     "沪胶后市有望延续强势",
-                     "经过两个交易日的强势调整后",
-                     "昨日上海天然橡胶期货价格再度大幅上扬"]
-    predict("model.pth", "chars.txt", input_strings)
-
+    test_strings = ["ffvfeeqqaa", "wwsdfg我oob", "r你qwdyghhz", "nyzkwww还有h"]
+    predict("model.pth", "vocab.json", test_strings)
