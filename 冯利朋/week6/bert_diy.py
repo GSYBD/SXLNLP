@@ -162,13 +162,13 @@ class DiyModel:
         return x,pool_output
 
 
-if __name__ == '__main__':
-    diyBert = DiyModel(state_dict=bert_static_dict)
-    sequence_output1, pooler_output1 = diyBert.forward(x)
-    print(pooler_output1)
-    sequence_output2, pooler_output2 = bert(torch_x)
-    print(pooler_output2)
-    print()
+# if __name__ == '__main__':
+#     diyBert = DiyModel(state_dict=bert_static_dict)
+#     sequence_output1, pooler_output1 = diyBert.forward(x)
+#     print(pooler_output1)
+#     sequence_output2, pooler_output2 = bert(torch_x)
+#     print(pooler_output2)
+#     print()
 
 
 
@@ -256,3 +256,6 @@ def get_bert_weight_num():
     return size
 
 
+if __name__ == '__main__':
+    size = get_bert_weight_num()
+    print(size)
