@@ -9,8 +9,8 @@ bert = BertModel.from_pretrained("/Users/gonghengan/Documents/hugging-face/bert-
 #
 bert_static_dict = bert.state_dict()
 # print(bert_static_dict)
-x = np.array([2450, 15486, 15167, 2110]) #通过vocab对应输入：深度学习
-torch_x = torch.LongTensor([x])  #pytorch形式输入
+x = np.array([2450, 15486, 15167, 2110])
+torch_x = torch.LongTensor([x])
 #softmax归一化
 def softmax(x):
     return np.exp(x)/np.sum(np.exp(x), axis=-1, keepdims=True)
@@ -196,7 +196,7 @@ layer normal: weight ,bias 权重 hidden_size,hidden_size
 pool层权重: weight,bias  hidden_size * hidden_size ， hidden_size
 """
 
-# 计算bert的训练参数量
+# 计算bert的训练参数量，
 def get_bert_weight_num():
     intermediate_size = 3072
     vocab_size = 21128
