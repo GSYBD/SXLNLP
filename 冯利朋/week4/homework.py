@@ -58,7 +58,7 @@ if __name__ == '__main__':
     results = all_cut(sentence, Dict, None, None)
     for re in results:
         print(re)
-    print("----------")
+    print("----------根据词频选择最大的")
     # 根据词频，计算最大的输出
     res_dict = {index: sum([Dict[char] for char in cut_word]) for index, cut_word in enumerate(results)}
     # 排序

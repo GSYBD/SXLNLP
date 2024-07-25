@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
+# 基于训练好的词向量模型进行聚类
+# 聚类采用Kmeans算法
+import math
+import re
+import json
+import jieba
+import numpy as np
+from gensim.models import Word2Vec
+from sklearn.cluster import KMeans
+from collections import defaultdict
+
+
+# 输入模型文件路径
+# 加载训练好的模型
+def load_word2vec_model(path):
+    model = Word2Vec.load(path)
+    return model
+
+
+def load_sentence(path):
+    sentences = set()
+    with open(path, encoding="utf8") as f:
+        for line in f:
+            sentence = line.strip()
+            sentences.add(" ".join(jieba.cut(sentence)))
+    print("获取句子数量：", len(sentences))
+    return sentences
+
+
+# 将文本向量化
+def sentences_to_vectors(sentences, model):
+    vectors = []
+    for sentence in sentences:
+        words = sentence.split()  # sentence是分好词的，空格分开
+        vector = np.zeros(model.vector_size)
+        # 所有词的向量相加求平均，作为句子向量
+        for word in words:
+            try:
+                vector += model.wv[word]
+            except KeyError:
+                # 部分词在训练中未出现，用全0向量代替
+                vector += np.zeros(model.vector_size)
+        vectors.append(vector / len(words))
+    return np.array(vectors)
+
+
+# 计算向量余弦值
+def cosine(vector1, vector2):
+    x_dot_y = sum([x * y for x, y in zip(vector1, vector2)])
+    sqrt_x = math.sqrt(sum([x ** 2 for x in vector1]))
+    sqrt_y = math.sqrt(sum([x ** 2 for x in vector2]))
+    if sqrt_x == 0 or sqrt_y == 0:
+        return 0
+    return x_dot_y / (sqrt_x * sqrt_y + 1e-7)
+
+
+# 计算余弦的平均值
+def average_cosine(center, labels, vectors):
+    result = {}
+    sum = 0
+    for index, value in enumerate(center):
+        for label in labels[index]:
+            center_cos = cosine(vectors[label], value)
+            sum += center_cos
+        avger_cos = sum / len(labels)
+        sum = 0
+        result[index] = avger_cos
+    result = sorted(result.items(), key=lambda item: item[1])
+    return result
+
+
+def main():
+    model = load_word2vec_model(r"model.w2v")  # 加载词向量模型
+    sentences = load_sentence("titles.txt")  # 加载所有标题
+    vectors = sentences_to_vectors(sentences, model)  # 将所有标题向量化
+
+    n_clusters = int(math.sqrt(len(sentences)))  # 指定聚类数量
+    print("指定聚类数量：", n_clusters)
+    kmeans = KMeans(n_clusters)  # 定义一个kmeans计算类
+    kmeans.fit(vectors)  # 进行聚类计算
+    center = kmeans.cluster_centers_
+    labels = {}
+    for i, key in enumerate(kmeans.labels_):
+        if key in labels:
+            labels[key].append(i)
+        else:
+            labels[key] = [i]
+
+    result = average_cosine(center, labels, vectors)
+
+    sentence_label_dict = defaultdict(list)
+    for sentence, label in zip(sentences, kmeans.labels_):  # 取出句子和标签
+        sentence_label_dict[label].append(sentence)  # 同标签的放到一起
+
+    for i in result[:5]: #取出平均值最小的五个
+        cluster = i[0]
+        print("cluster %s :" % cluster)
+        for sentences in sentence_label_dict[cluster]:
+            print(sentences.replace(" ",""))
+        print("---------")
+
+
+if __name__ == "__main__":
+    main()

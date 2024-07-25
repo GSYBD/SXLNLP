@@ -1,0 +1,2 @@
+宋新宇第5周作业：实现基于kmeans的类内距离计算，筛选优质类别。
+因model_sxy.w2v文件较大（超过25MB）无法上传，请先运行week5_word2vec_train_sxy中的main函数，得到训练的词向量模型后，再运行week5_homework_sxy。
