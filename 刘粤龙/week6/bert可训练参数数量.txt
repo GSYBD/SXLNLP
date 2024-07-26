@@ -1,0 +1,20 @@
+1. Embedding 层：
+word_embeddings = vocab_size * hidden_size
+position_embeddings = max_position_embeddings * hidden_size
+token_type_embeddings = type_vocab_size * hidden_size
+LayerNorm.weight = hidden_size
+LayerNorm.bias = hidden_size
+
+2. Transformer 层
+Self-attention 层：
+	Q, K, V 参数量 =3 * (weight + bias) = 3 * (hidden_size * hidden_size + hidden_size)
+	output层 = output.dense.weight + output.dense.bias = hidden_size * hidden_size + hidden_size
+	LayerNorm层 = LayerNorm.weight + LayerNorm.bias = hidden_size + hidden_size
+Feed-forward 层:
+	第一层线性层 = layer.0.intermediate.dense.weight + layer.0.intermediate.dense.bias = intermediate_size *  hidden_size + hidden_size
+	第二层线性层 = layer.1.intermediate.dense.weight + layer.1.intermediate.dense.bias = intermediate_size *  hidden_size + hidden_size
+	LayerNorm层 = LayerNorm.weight + LayerNorm.bias = hidden_size + hidden_size
+
+3. Pooler 层 = pooler.dense.weight + pooler.dense.bias = hidden_size * hidden_size + hidden_size
+
+
