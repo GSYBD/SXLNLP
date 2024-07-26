@@ -1,0 +1,72 @@
+"""
+{
+  "architectures": [
+    "BertForMaskedLM"
+  ],
+  "attention_probs_dropout_prob": 0.1,
+  "directionality": "bidi",
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.1,
+  "hidden_size": 768,
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "layer_norm_eps": 1e-12,
+  "max_position_embeddings": 512,
+  "model_type": "bert",
+  "num_attention_heads": 12,
+  "num_hidden_layers": 1,
+  "pad_token_id": 0,
+  "pooler_fc_size": 768,
+  "pooler_num_attention_heads": 12,
+  "pooler_num_fc_layers": 3,
+  "pooler_size_per_head": 128,
+  "pooler_type": "first_token_transform",
+  "type_vocab_size": 2,
+  "vocab_size": 21128,
+  "num_labels":18
+}
+"""
+max_len = 4
+vocab_size = 21128
+hidden_size = 768
+type_vocab_size = 2
+intermediate_size = 3072
+num_attention_heads = 12
+num_hidden_layers = 1
+
+
+def Computing_training_data():
+    word_embeddings = vocab_size * hidden_size  # 词嵌入维度由词表大小和隐藏层大小决定
+    position_embeddings = max_len * hidden_size  # 位置嵌入维度由最大长度和隐藏层大小决定
+    token_type_embeddings = type_vocab_size * hidden_size  # 句子类型嵌入维度由句子类型数量和隐藏层大小决定
+    total_embeddings = word_embeddings + position_embeddings + token_type_embeddings  # 总的嵌入维度
+    layer_norm_embeddings = hidden_size * 2  # 层归一化嵌入维度由隐藏层大小决定2代表一个w和一个b
+    embedding_output = total_embeddings + layer_norm_embeddings  # 输出维度由总的嵌入维度和层归一化嵌入维度决定
+
+
+    query = hidden_size * hidden_size + hidden_size  # 查询维度由隐藏层大小决定
+    key = hidden_size * hidden_size + hidden_size  # 键维度由隐藏层大小决定
+    value = hidden_size * hidden_size + hidden_size  # 值维度由隐藏层大小决定
+    attention_output = query + key + value  # 输出维度由查询、键、值维度决定
+    layer_norm_attention = hidden_size * 2  # 层归一化输出维度由隐藏层大小决定2代表一个w和一个b
+
+    #  前馈机制里有两个线性层，一个是输入到输出的线性层，一个是中间层到输出的线性层
+    intermediate_size_weight = intermediate_size * hidden_size  # 权重维度由隐藏层大小和中间层大小决定
+    intermediate_size_bias = intermediate_size  # 偏置维度由中间层大小决定
+    intermediate_output_weight = hidden_size * intermediate_size  # 输出维度由隐藏层大小和中间层大小决定
+    intermediate_output_bias = hidden_size  # 输出维度由隐藏层大小决定
+    feed_forward_params = intermediate_size_weight + intermediate_size_bias + intermediate_output_weight + intermediate_output_bias  # 前馈参数维度由权重、偏置、输出维度决定
+
+    transformers_output = attention_output + layer_norm_attention + feed_forward_params  # 输出维度由注意力输出和前馈参数输出决定
+
+    pooler_output = hidden_size * hidden_size + hidden_size   # 池化层输出维度由隐藏层大小决定
+
+
+
+    total_params = embedding_output + num_attention_heads * (transformers_output + pooler_output)  # 总参数维度由嵌入输出、Transformer输出、池化层输出决定
+
+    print("总的可训练参数为：", total_params)
+
+
+if __name__ == '__main__':
+    Computing_training_data()
