@@ -1,0 +1,23 @@
+对于长度维L的句子 可训练参数
+BERT_embedding层
+
+--Token Enbbeding L*768
+--Seg Enbbeding 2*768
+--Pos Enbedding L*768
+
+BERT_embedding层参数: (2L+2)*768个可训练参数
+
+
+Encoder层
+
+--Attention ：3*(L+768+1)*768
+--Q：L*768 + 768*768+b
+--K：L*768 + 768*768+b
+--W：L*768 + 768*768+b
+
+-Liner(Attention):L*768
+
+-output = Liner(gelu(Liner(x))：L*768*4*2
+Encoder *12：（12L*768+3*768*768+3 ）*12个可训练参数
+                
+总计 ：(2L+2)*768+（12L*768+3*768*768+3 )*12 个可训练参数
