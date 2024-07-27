@@ -68,11 +68,12 @@ def main():
     for sen_vec, label in zip(vectors, kmeans.labels_):
         dists[label].append(np.sqrt(np.sum(np.square(sen_vec - kmeans.cluster_centers_[label]))))
 
-    dist_avg_lable = defaultdict(list)
+    dist_avg_label = defaultdict(list)
     for label,dist in dists.items():
-        dist_avg_lable[label] = np.sum(dist)/len(dist)
+        dist_avg_label[label] = np.sum(dist)/len(dist)
+    new_dist_avg_label =  sorted(dist_avg_label.items(), key=lambda d:d[1], reverse=False)
     print("====================================")
-    print(sorted(dist_avg_lable.values()))
+    print(new_dist_avg_label)
     
         
 

@@ -1,0 +1,26 @@
+import numpy as np
+from sklearn.cluster import KMeans
+
+# 生成示例数据
+np.random.seed(0)
+X = np.random.rand(100, 2)
+
+# KMeans聚类
+kmeans = KMeans(n_clusters=5, random_state=0).fit(X)
+labels = kmeans.labels_
+centers = kmeans.cluster_centers_
+
+# 计算类内距离
+distances = []
+for i in range(5):
+    points = X[labels == i]
+    center = centers[i]
+    dist = np.linalg.norm(points - center, axis=1)
+    distances.append(dist.mean())
+
+# 筛选优质类别
+threshold = np.mean(distances)
+quality_clusters = [i for i in range(5) if distances[i] < threshold]
+
+print("优质类别索引:", quality_clusters)
+print("每个类别的类内距离:", distances)
