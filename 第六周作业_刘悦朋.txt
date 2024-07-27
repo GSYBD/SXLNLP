@@ -1,0 +1,40 @@
+Bert 中的可训练参数数量
+
+	---	Embedding 层
+	
+		Token Embedding		词数量 × 隐层数		vocabulary_size * hidden_size
+		Segment Embedding							2 * hidden_size
+		Position Embedding		句子长度 × 隐层数		length * hidden_size
+
+		总计						( vocabulary_size + length + 2 ) * hidden_size
+
+	---	Self-attention
+
+		Attention 部分
+			Q、K、V 矩阵		隐层数 × 隐层数		hidden_size * hidden_size * 3
+			Bias					句子长度 × 隐层数		length * hidden_size * 3
+			
+			总计					( 3 * hidden_size + 3 * length ) * hidden_size
+		
+		Attention 后的线性层
+			矩阵					隐层数 × 隐层数		hidden_size * hidden_size
+			Bias					句子长度 × 隐层数		length * hidden_size
+
+			总计					( length + hidden_size ) * hidden_size
+
+	---	前馈
+		第一个线性层
+			矩阵					隐层数 × 4 倍隐层数	hidden_size * 4 hidden_size
+			Bias					句子长度 × 4 倍隐层数	length * 4 hidden_size
+
+			总计					( 4 * hidden_size + 4 * length ) * hidden_size
+	
+		第二个线性层
+			矩阵					4 倍隐层数 × 隐层数	4 hidden_size * hidden_size
+			Bias					句子长度 × 隐层数		length * hidden_size
+
+			总计					( 4 * hidden_size + length ) * hidden_size
+
+	---	总计
+			包含 Bias				hidden_size * ( vocabulary_size + 2 + 109 * length + 144 * hidden_size )
+			不包含 Bias 			hidden_size * ( vocabulary_size + 2 + length + 144 * hidden_size )
