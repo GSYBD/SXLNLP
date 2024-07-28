@@ -1,0 +1,24 @@
+Bert参数量 = embedding层参数 + 层数 * 每层的参数个数。
+
+每层的参数个数 = MultiHeadAttention层参数 + MLP层参数 + LayerNorm层参数。
+
+假设隐藏层维度为h。
+
+embedding层参数
+embedding有三种：token embeddings, segment embeddings, position embeddings。
+
+token embeddings参数个数为：词表大小 * h。
+
+segment embedidngs参数个数为：2 * h, 2表示有2中token类型，属于第一句还是第二句中的token。
+
+position embeddings: 512 * h, Bert中句子长度固定为512。
+
+每层的参数个数
+MultiHeadAttention
+共有Q, K, V, O四个矩阵，每个矩阵的维度为(h, h)，外加上bias。MultiheadAttention中参数量为：4h* h + h。
+
+MLP
+MLP共有两个全连接层，维度变化为h -> 4h -> h，外加上bias。MLP层参数量为：(h * 4h + 4h) + (4h * h + h)。
+
+LayerNorm
+在一个block中，共有两个LayerNorm，MultiHeadAttention后会接一个LayerNorm，MLP后会接一个LayerNorm。每个LayerNorm中共有gamma和beta两个参数，维度为h。LayerNorm层参数量为：2 * 2 * h。
