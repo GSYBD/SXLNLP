@@ -1,0 +1,9 @@
+Model,HiddenSize,LearningRate,BatchSize,optimizer,PoolStyle,输出模型名称,Acc,time(预测耗时)
+fast_text,128,0.001,64,adam,avg,output/fast_text---8729.pth,0.90625,0.001898050308227539
+fast_text,128,1e-05,64,adam,avg,output/fast_text---8665.pth,0.671875,0.0007960796356201172
+gated_cnn,128,0.001,64,adam,avg,output/gated_cnn---8676.pth,0.90625,0.022036075592041016
+gated_cnn,128,1e-05,64,adam,avg,output/gated_cnn---886.pth,0.6875,0.022398948669433594
+lstm,128,0.001,64,adam,avg,output/lstm---508.pth,0.84375,0.01736593246459961
+lstm,128,1e-05,64,adam,avg,output/lstm---277.pth,0.78125,0.01789116859436035
+bert,128,0.001,64,adam,avg,output/bert---4580.pth,0.640625,0.6282031536102295
+bert,128,1e-05,64,adam,avg,output/bert---774.pth,0.90625,0.6276490688323975
