@@ -9,6 +9,7 @@ from config import Config
 import numpy as np
 import random
 import csv
+from transformers import BertTokenizer
 from predict import Predict
 #[DEBUG, INFO, WARNING, ERROR, CRITICAL]
 logging.basicConfig(level=logging.INFO, format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -111,13 +112,32 @@ def split_data(data_path, config):
     # print("--------------")
 # 评估文本长度
 
+def ask(query, model_path,config,train_data):
+    # input_ds = train_data.dataset.sentence_encode(query)
+    # tokenizer = BertTokenizer.from_pretrained(config['pretrain_model_path'])
+    # input_ds = tokenizer.encode(query, max_length=config['max_length'], pad_to_max_length=True)
+    input_ds = train_data.dataset.sentence_encode(query)
+    model = TorchModel(config)
+    model.load_state_dict(torch.load(model_path))
+    model.eval()
+    with torch.no_grad():
+        pred = model(torch.LongTensor([input_ds]))
+    print(torch.argmax(pred))
+
 if __name__ == '__main__':
 
     # 此方法用于分割数据集
     # split_data('./data/文本分类练习.csv', Config)
 
-    main(Config)
+    # 单个模型预测
+    # main(Config)
 
+    # 预测
+    train_data = load_data(Config['train_data_path'], Config)
+    model_path = './output/lstm---8729.pth'
+    ask('还不错,吃了好几次了，下次路过还过来', model_path, Config, train_data)
+
+    # 矩阵网格，对几个模型进行评估
     # res = []
     # for model in ["fast_text", "gated_cnn", "lstm", "bert"]:
     #     if model == 'bert':
