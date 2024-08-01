@@ -119,6 +119,6 @@ def  predict(model_dict):
 
 
 if __name__ == '__main__':
-    # main()
+    main()
     model = TorchModel(10)
     predict("model.pt")

@@ -1,0 +1,4 @@
+embedding_layer: vocab_size * hidden_size + 2 * hidden_size + max_position_embeddings * hidden_size
+multi_head_attention_layer: block_nums * (3 * hidden_size * head_nums * (hidden_size // head_nums) + hidden_size * hidden_size)
+feed_forward_layer:block_nums*2 * hidden_size * 4 * hidden_size
+norm_layer:2 * hidden_size + 2 * 12 * 2 * hidden_size
