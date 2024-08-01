@@ -52,7 +52,7 @@ def main():
     vectors = sentences_to_vectors(sentences, model)  # 将所有标题向量化
 
     n_clusters = int(math.sqrt(len(sentences)))  # 指定聚类数量
-    print("指定聚类数量：", n_clusters)
+    print("指定聚类数量：", n_clusters) #矩阵，形状：质心*维度
     kmeans = KMeans(n_clusters)  # 定义一个kmeans计算类
     kmeans.fit(vectors)  # 进行聚类计算
 
@@ -60,10 +60,12 @@ def main():
     for sentence, label in zip(sentences, kmeans.labels_):  # 取出句子和标签
         sentence_label_dict[label].append(sentence)  # 同标签的放到一起
 
-    # 计算类内距离
+
+    # 计算类内距离，label代表每个文本属于哪一类,label不会超过定义的类，假如一共42类，那最大label就是42
     density_dict = defaultdict(list)
     for vector_index, label in enumerate(kmeans.labels_):
         vector = vectors[vector_index]  # 某句话的向量
+        # kmeans.cluster_centers_内置，代表42个类的质心，每一行就是一个质心，用每个文本的类别取出该文本向量的质心
         center = kmeans.cluster_centers_[label]  # 对应的类别中心向量
         distance = cosine_distance(vector, center)  # 计算距离
         density_dict[label].append(distance)  # 保存下来
@@ -71,6 +73,7 @@ def main():
         density_dict[label] = np.mean(distance_list)  # 对于每一类，将类内所有文本到中心的向量余弦值取平均
     density_order = sorted(density_dict.items(), key=lambda x: x[1], reverse=True)  # 按照平均距离排序，向量夹角余弦值越接近1，距离越小
 
+    # 通过计算每个簇内点与中心点的距离，舍弃距离较远，不紧致的点，留下较高质量的点
     # 按照余弦距离顺序输出
     for label, distance_avg in density_order:
         print("cluster %s , avg distance %f: " % (label, distance_avg))

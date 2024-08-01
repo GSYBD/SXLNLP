@@ -1,0 +1,49 @@
+可训练参数的计算过程：
+
+embedding:
+训练参数：vocab_size * hidden_size：21128 * 768
+
+self_attention：
+三个线性层q,k,v:分别有w+b,
+w是：hidden_size * hidden_size
+b是：max_len *hidden_size
+训练参数：3 *（768*768 + 4*768）
+多头机制：
+训练参数：（4*64）*（64*4）* （4*64）*12
+再过一层线性层：
+w是：hidden_size * hidden_size
+b是：max_len *hidden_size
+训练参数：768*768 + 4*768
+残差机制，归一化层：
+w是：hidden_size * hidden_size
+b是：max_len *hidden_size
+训练参数：768*768 + 4*768
+
+feed_forward：
+先过一层线性层：
+w是：hidden_size * hidden_size
+b是：max_len *hidden_size
+训练参数：768*768 + 4*768
+再过一层激活层：无训练参数
+再过一层线性层：
+w是：hidden_size * hidden_size
+b是：max_len *hidden_size
+训练参数：768*768 + 4*768
+再过残差机制，归一化层：
+w是：hidden_size * hidden_size
+b是：max_len *hidden_size
+训练参数：768*768 + 4*768
+
+
+
+
+
+
+
+
+
+
+
+
+
+：
