@@ -1,0 +1,41 @@
+import copy
+
+#词典；每个词后方存储的是其词频，词频仅为示例，不会用到，也可自行修改
+dict = {"经常":0.1,
+        "经":0.05,
+        "有":0.1, 
+        "常":0.001,
+        "有意见":0.1,
+        "歧":0.001,
+        "意见":0.2,
+        "分歧":0.2, 
+        "见":0.05,
+        "意":0.05,
+        "见分歧":0.05,
+        "分":0.1}
+
+#待切分文本
+sentence = "经常有意见分歧"
+
+def one_step(dict,sentence,index,one_cut,target): 
+
+    if index == len(sentence):
+        target.append(copy.deepcopy(one_cut))
+        return
+    
+    for key in dict.keys():
+        if(key[0] == sentence[index]):
+            one_cut.append(key)
+            index += len(key)
+            one_step(dict,sentence,index,one_cut,target)
+            one_cut.remove(key)
+            index -= len(key)
+
+def all_cut_words(sentence,dict):
+    target = []
+    one_cut = []
+    one_step(dict,sentence,0,one_cut,target)
+    return target
+
+
+print(all_cut_words(sentence,dict))

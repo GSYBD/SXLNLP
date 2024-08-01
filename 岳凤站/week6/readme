@@ -1,0 +1,17 @@
+embedding层可训练参数：
+(vocab_size+type_vocab_size+max_position_embeddings)*hidden_size
+=(21128+2+512)*768=16621056
+
+1层transform可训练参数
+Self-attention层
+WQ=WK=WV=liner =hidden_size*hidden_size=768*768=589824
+本层可训练参数hidden_size*hidden_size*4=589824*4=2359296
+Feed forward层
+intermediate_size*hidden_size*2=3072*768*2=4718592
+1层transform可训练参数=Self-attention层+Feed forward层
+=2359296+4718592=7077888
+
+
+BERT可训练参数量：
+1层transform可训练参数*num_hidden_layers+embedding层可训练参数
+=7077888*12+16621056=101555712

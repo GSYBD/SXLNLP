@@ -1,0 +1,8 @@
+def full_cut(text):
+    return list(text)
+
+# 示例文本
+text = "红发男生"
+result = full_cut(text)
+print(result)
+['红', '发', '男', '生']
