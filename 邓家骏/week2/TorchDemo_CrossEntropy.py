@@ -9,13 +9,15 @@ class TorchModel(nn.Module):
     def __init__(self,input_size):
         super(TorchModel,self).__init__()
         self.linaer = nn.Linear(input_size,5)
-        self.activation = nn.Softmax(dim=1)
+        # self.activation = nn.Softmax(dim=1)
         # self.activation = torch.sigmoid
+        # self.out_linaer = nn.Linear(5,5)
         self.loss = nn.functional.cross_entropy
     
     def forward(self,x,y = None):
         y_pred = self.linaer(x)
-        y_pred  = self.activation(x)
+        # x = self.activation(x)
+        # y_pred = self.out_linaer(x)
         if y is not None:
             return self.loss(y_pred,y)
         else:
@@ -73,7 +75,7 @@ def main():
     # 训练参数
     epoch_num = 20
     batch_size = 20
-    train_sample = 2000
+    train_sample = 20000
     input_size = 5
     learning_rate = 0.001
     # model实例
