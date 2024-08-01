@@ -1,0 +1,47 @@
+import pandas as pd from sklearn.model_selection 
+import train_test_split from sklearn.feature_extraction.text 
+import CountVectorizer from sklearn.naive_bayes 
+import MultinomialNB from sklearn.metrics 
+import accuracy_score
+
+# 创建一个简单的数据集
+data = {
+    'review_text': [
+        "This product is great!",
+        "I am very satisfied with this purchase.",
+        "The quality is poor and I am disappointed.",
+        "Not worth the price.",
+        "Excellent service and fast shipping."
+    ],
+    'label': ['positive', 'positive', 'negative', 'negative', 'positive']
+}
+
+# 将数据集转换为DataFrame
+df = pd.DataFrame(data)
+
+# 提取评论文本和标签
+X = df['review_text']
+y = df['label']
+
+# 划分训练集和测试集
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 文本向量化（将文本转换为计数向量）
+vectorizer = CountVectorizer()
+X_train_counts = vectorizer.fit_transform(X_train)
+X_test_counts = vectorizer.transform(X_test)
+
+# 构建和训练分类模型
+model = MultinomialNB()
+model.fit(X_train_counts, y_train)
+
+# 预测测试集
+y_pred = model.predict(X_test_counts)
+
+# 计算准确率
+accuracy = accuracy_score(y_test, y_pred)
+print("准确率:", accuracy)
+
+# 预测结果
+print("预测结果:", y_pred)
+print("实际标签:", y_test.values)
