@@ -1,0 +1,5 @@
+model,lr,hidden_size,batch_size,pooling_style
+gated_cnn,0.001,128,64,avg
+gated_cnn,0.001,128,128,avg
+gated_cnn,0.0001,128,64,avg
+gated_cnn,0.0001,128,128,avg
