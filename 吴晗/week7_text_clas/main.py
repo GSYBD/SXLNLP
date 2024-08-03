@@ -97,24 +97,27 @@ if __name__ == "__main__":
         # for model in ['lstm', 'gru', 'cnn', "gated_cnn"]:
         for model in ['bert', 'bert_lstm', 'bert_cnn']:
             Config["model_type"] = model
-            for lr in [1e-3, 1e-4]:
+            Config["epoch"] = 5  # 这些数据，微调5轮够了
+            # for lr in [1e-3, 1e-4]:
+            for lr in [1e-5, 5e-5]:  # bert微调,学习率要小一些，大了测试下loss不下降（日志6210-6302行）
                 Config["learning_rate"] = lr
                 for hidden_size in [64, 128]:
                     Config["hidden_size"] = hidden_size
                     for batch_size in [128, 256]:
                         if 'bert' in model:
-                            Config["batch_size"] = batch_size / 8
+                            Config["batch_size"] = int(batch_size / 8)
                         else:
                             Config["batch_size"] = batch_size
                         for pooling_style in ['max', "avg"]:
                             Config["pooling_style"] = pooling_style
                             acc, eval_time = main(Config) 
-                            logger.info(f'{acc}, {Config['model_type']}, {Config['learning_rate']}, {Config['hidden_size']}, {Config['batch_size']}, {Config['pooling_style']}, {eval_time}')
+                            logger.info(f'********\n{acc}\t{Config['model_type']}\t{Config['learning_rate']}\t{Config['hidden_size']}\t{Config['batch_size']}\t{Config['pooling_style']}\t{eval_time}')
                             print("最后一轮准确率：", acc, "当前配置：", Config)
                             result.append([acc, Config['model_type'], Config['learning_rate'], Config['hidden_size'], Config['batch_size'], Config['pooling_style'], eval_time])
         result_df = pd.DataFrame(result,
                                 columns=['acc', "model", "lr", "hidden_size", "batch_size", "pooling_style", 'eval_time'])
-        result_df.to_csv("result.tsv", sep='\t', index=False)
+        # result_df.to_csv("result.tsv", sep='\t', index=False)
+        result_df.to_csv("result.tsv", sep='\t', index=False, mode='a')
     except Exception as e:
         print(e)
         for res in result:

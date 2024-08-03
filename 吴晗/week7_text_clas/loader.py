@@ -84,7 +84,7 @@ def load_data(data_path, config, shuffle=True):
 if __name__ == "__main__":
     from config import Config
     dg = DataGenerator("data/valid_set.json", Config)
-    print(dg[6])
+    print(dg[5])
     # 还原看看
-    print(dg.tokenizer.decode(dg[6][0].tolist()))
-    print(dg.tokenizer.decode(dg[6][1].tolist()))
+    print(dg.tokenizer.decode(dg[5][0].tolist()))
+    print(dg.tokenizer.decode(dg[5][1].tolist()))
