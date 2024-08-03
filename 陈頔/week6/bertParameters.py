@@ -30,10 +30,13 @@ self_attention_parameters = (embedding_size * embedding_size + embedding_size) *
 # 自注意力输出部分：
 # embedding_size * embedding_size + embedding_size 是self输出的线性层wx+b参数（w矩阵参数+b偏置参数）
 # embedding_size + embedding_size是归一化layer_norm层参数：缩放参数Gamma大小是embedding_size，偏置参数也是embedding_size
+# 归一化layer_norm层 w的目的是对于原始数据的放缩，一般情况下是变小，变小的时候整体数值有偏移，所以加一个可训练的w来控制这种偏移，跟线性层不一样。
 self_attention_out_parameters = embedding_size * embedding_size + embedding_size + embedding_size + embedding_size
 
 # Feed Forward参数：
-# embedding_size * hide_size + hide_size第一个线性层，偏置项作用是为每个隐藏单元提供一个偏移量
+# embedding_size * hide_size + hide_size第一个线性层，偏置项作用是为每个隐藏单元提供一个偏移量，
+# 为什么偏置项是hide_size，因为如公式所示，线性层会先映射成 4倍的hide_size，再映射回embedding_size
+# 所以为了进行同纬度的相加，偏置项是hide_size
 # embedding_size * hide_size + embedding_size第二个线性层，偏置项作用是为了保持输出维度与输入维度（embedding_size）的一致性
 # embedding_size + embedding_size是layer_norm层
 feed_forward_parameters = embedding_size * hide_size + hide_size + embedding_size * hide_size + embedding_size + embedding_size + embedding_size
