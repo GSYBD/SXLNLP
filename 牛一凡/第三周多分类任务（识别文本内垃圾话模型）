@@ -1,0 +1,163 @@
+import torch
+import torch.nn as nn
+import numpy as np
+import random
+import json
+
+
+
+'''
+判断文本中是否有某些特定字符出现，对特定字符进行划分区域
+例如：美团外卖的线上售后平台客户出现脏话字眼，直接无法正常发送
+'''
+
+class TorchModel(nn.Module):
+    def __init__(self, vector_dim, sentence_length, vocab):
+        super(TorchModel, self).__init__()
+        self.embedding = nn.Embedding(len(vocab), vector_dim)
+        # Embedding层是一种用于将原始数据映射到低维向量空间的神经网络层。
+        self.pool = nn.AvgPool1d(sentence_length)  # 池化层
+        self.classify = nn.Linear(vector_dim, 1)  # 线性层
+        self.activation = torch.sigmoid  # sigmoid归一化函数
+        self.loss = nn.functional.cross_entropy  # 交叉熵损失   注：不太清楚实际sigmoid处理完后传给交叉熵处理的数据是啥样的就没自己写交叉熵函数进行调用直接用了内置的交叉熵函数
+    # 当输入真实标签，返回loss：无真实标签，返回预测值
+    def forward(self, x, y=None):
+        x = self.embedding(x)
+        x = x.transpose(1, 2)
+        x = self.pool(x)
+        x = x.squeeze()
+        x = self.classify(x)
+        y_pred = self.activation(x)
+        if y is not None:
+            return self.loss(y_pred, y)  # 预测值和真实值计算损失
+        else:
+            return y_pred  # 输出预测结果
+
+
+# 创建一个字符集
+# 为每个字符生成对应标号
+# 这个地方出现过一个踩坑的点我的chars里写入了重复字符导致我vocab里生成的向量对应标识数值大于了vocab自己真实的长度。一键报错
+def build_vocab():
+    chars = "操你妈崽种吃屎了250bitchUSAEngls678=a"  # 字符集
+    vocab = {"pad": 0}
+    for index, char in enumerate(chars):
+        vocab[char] = index + 1  # 每一个字符对应一个序号
+    vocab['unk'] = len(vocab)
+    return vocab
+
+
+# 随机生成一个样本
+# 从所有字中选取sentence_length个字
+# 反之为负样本
+def build_sample(vocab, sentence_length):
+    # 随机从字表选取sentence_Length个字，可能重复
+    x = [random.choice(list(vocab.keys())) for _ in range(sentence_length)]
+    # 指定垃圾话出现时为正样本
+    # 此处练习的时候操作打印查看对应样本分类的时候发现问题，当chars样本是词组的时候用set打标签的办法就不能正常被匹配上了，所以把chars里的词组换回了单个不重复的字符
+    if set("操屎") & set(x):
+        # 这个地方有一个疑问如果我set(x)拿到的是一个叠词的时候会怎们办？
+        y = 1
+    # 指定无垃圾话的时候为负样本
+    else:
+        y = 0
+    x = [vocab.get(word, vocab['unk']) for word in x]   # 将字符转换成序号为了进入embedding进行转化
+    return x, y
+
+
+
+
+# 建立数据集
+# 输入需要的样本数量，需要多少生成多少
+def build_dataset(sample_length, vocab, sentence_length):
+    dataset_x = []
+    dataset_y = []
+    for i in range(sample_length):
+        x, y = build_sample(vocab, sentence_length)
+        dataset_x.append(x)
+        dataset_y.append([y])
+    return torch.LongTensor(dataset_x), torch.FloatTensor(dataset_y)
+
+
+# 建立模型
+def build_model(vocab, char_dim, sentence_length):
+    model = TorchModel(char_dim, sentence_length, vocab)
+    return model
+
+# 测试代码
+# 用来测试每轮模型的准确率
+# 调用后的代码出现了预测准确率无法超过0.6
+def evaluate(model, vocab, sample_length):
+    model.eval()  #eval()函数是一个内置函数，用于计算并返回一个字符串表达式的值
+    x, y = build_dataset(200, vocab, sample_length)  # 建立200个用于测试的样本
+    print(f"本次预测集中共有{sum(y)}个正样本，{200-sum(y)}个负样本")
+    correct, wrong = 0, 0
+    with torch.no_grad():
+        y_pred = model(x)
+        for y_p, y_t in zip(y_pred, y):  # 与真实标签进行对比
+            if float(y_p) < 0.5 and int (y_t) == 0:
+                correct += 1   # 负样本判断正确
+            elif float(y_p) > 0.5 and int (y_t) == 1:
+                correct += 1   # 正样本判断正确
+            else:
+                wrong += 1
+    print(f"正确预测个数为:{correct}个，正确率为：{correct/(correct+wrong)}")
+    return correct/(correct+wrong)
+
+def main():
+    #配置参数
+    epoch_num = 20           # 训练轮数
+    batch_size = 20          # 每次训练的样本数
+    train_sample = 500       # 每轮训练总共训练的样本总数
+    char_dim = 20            # 每个字的维度
+    sentence_length = 6      # 样本文本长度
+    learning_rate = 0.001    # 学习率
+    # 建立字表
+    vocab = build_vocab()
+    # 建立模型
+    model = build_model(vocab, char_dim, sentence_length)
+    # 选择优化器
+    optim = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    log = []
+    # 训练过程
+    for epoch in range(epoch_num): #epoch_num也用于控制训练过程中的迭代次数
+        model.train()
+        watch_loss = []
+        for batch in range(int(train_sample / batch_size)):
+            x, y = build_dataset(batch_size, vocab, sentence_length)  # 构造一组训练样本
+            optim.zero_grad()  # 梯度归0
+            loss = model(x, y)  # 计算loss
+            loss.backward()  # 计算梯度
+            optim.step()  # 更新权重
+            watch_loss.append(loss.item())
+        print(f"==================第{epoch + 1}轮平均loss值{np.mean(watch_loss)}")
+        acc = evaluate(model, vocab, sentence_length)
+        log.append([acc, np.mean(watch_loss)])
+
+    # 保存模型
+    torch.save(model.state_dict(),"model.pth")
+    # 保存词表
+    writer = open("vocab.json", "w", encoding="utf8")
+    writer.write(json.dumps(vocab, ensure_ascii=False, indent=2))
+    writer.close()
+    return
+
+# 使用训练好的模型做预测
+def predict(model_path, vocab_path, input_strings):
+    char_dim = 20  # 每个字的维度
+    sentence_length = 6  # 样本文本长度
+    vocab = json.load(open(vocab_path, "r", encoding="utf8"))  # 加载字符表
+    model = build_model(vocab, char_dim, sentence_length)  # 建立，模型
+    model.load_state_dict(torch.load(model_path))    # 加载训练好的权重
+    x = []
+    for input_string in input_strings:
+        x.append([vocab[char] for char in input_string])  # 将输入序列化
+    model.eval()  # 测试模式
+    with torch.no_grad():  # 不计算梯度
+        result = model.forward(torch.LongTensor(x))  # 输出预测模型值
+    for i, input_string in enumerate(input_strings):
+        print(f"输入: {input_string}, 预测类别：{round(float(result[i]))}, 概率值：{result[i]}")
+
+if __name__ == "__main__":
+    main()
+
+
