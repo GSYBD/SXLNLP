@@ -5,21 +5,17 @@
 """
 
 Config = {
-    "model_path": "output",
-    "train_data_path": "文本分类练习.csv",
-    "valid_data_path": "文本分类练习.csv",
-    "vocab_path":"chars.txt",
-    "model_type":"bert",
-    "max_length": 30,
-    "hidden_size": 256,
-    "kernel_size": 3,
-    "num_layers": 1,
-    "epoch": 15,
-    "batch_size": 128,
-    "pooling_style":"max",
+    "model_path": "model_output",
+    "schema_path": "../data/schema.json",
+    "train_data_path": "../data/train.json",
+    "valid_data_path": "../data/valid.json",
+    "vocab_path":"../chars.txt",
+    "max_length": 20,
+    "hidden_size": 128,
+    "epoch": 10,
+    "batch_size": 32,
+    "epoch_data_size": 200,     #每轮训练中采样数量
+    "positive_sample_rate":0.5,  #正样本比例
     "optimizer": "adam",
-    "learning_rate": 1e-4,
-    "pretrain_model_path":r"D:\AI课程\八斗AI\第六周 预训练模型\bert-base-chinese",
-    "seed": 987
+    "learning_rate": 1e-3,
 }
-

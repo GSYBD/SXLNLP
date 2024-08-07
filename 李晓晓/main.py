@@ -7,24 +7,16 @@ import os
 import numpy as np
 import logging
 from config import Config
-from model import TorchModel, choose_optimizer
+from model import SiameseNetwork, choose_optimizer
 from evaluate import Evaluator
 from loader import load_data
-from tabulate import tabulate
-#[DEBUG, INFO, WARNING, ERROR, CRITICAL]
-logging.basicConfig(level=logging.INFO, format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 """
 模型训练主程序
 """
-
-
-seed = Config["seed"] 
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed_all(seed)
 
 def main(config):
     #创建保存模型的目录
@@ -33,7 +25,7 @@ def main(config):
     #加载训练数据
     train_data = load_data(config["train_data_path"], config)
     #加载模型
-    model = TorchModel(config)
+    model = SiameseNetwork(config)
     # 标识是否使用gpu
     cuda_flag = torch.cuda.is_available()
     if cuda_flag:
@@ -50,36 +42,21 @@ def main(config):
         logger.info("epoch %d begin" % epoch)
         train_loss = []
         for index, batch_data in enumerate(train_data):
+            optimizer.zero_grad()
             if cuda_flag:
                 batch_data = [d.cuda() for d in batch_data]
-
-            optimizer.zero_grad()
-            input_ids, labels = batch_data   #输入变化时这里需要修改，比如多输入，多输出的情况
-            loss = model(input_ids, labels)
+            input_id1, input_id2, labels = batch_data   #输入变化时这里需要修改，比如多输入，多输出的情况
+            loss = model(input_id1, input_id2, labels)
+            train_loss.append(loss.item())
+            # if index % int(len(train_data) / 2) == 0:
+            #     logger.info("batch loss %f" % loss)
             loss.backward()
             optimizer.step()
-
-            train_loss.append(loss.item())
-            if index % int(len(train_data) / 2) == 0:
-                logger.info("batch loss %f" % loss)
         logger.info("epoch average loss: %f" % np.mean(train_loss))
-        acc = evaluator.eval(epoch)
-    # model_path = os.path.join(config["model_path"], "epoch_%d.pth" % epoch)
-    # torch.save(model.state_dict(), model_path)  #保存模型权重
-    return acc
+        evaluator.eval(epoch)
+    model_path = os.path.join(config["model_path"], "epoch_%d.pth" % epoch)
+    torch.save(model.state_dict(), model_path)
+    return
 
 if __name__ == "__main__":
     main(Config)
-
-    for model in ["cnn","bert","bert_lstm","bert_cnn"]:
-        Config["model_type"] = model
-        accuracy = mock_main(Config)  # 调用模拟的main函数
-        row = [model, Config["learning_rate"], Config["hidden_size"], accuracy]
-        table_data.append(row)
-
-        # 设置表格的列标题
-        headers = ["Model", "Learning_Rate", "Hidden_Size", "最后一轮准确率"]
-
-        # 打印表格
-        print(tabulate(table_data, headers=headers, tablefmt="grid"))
-
