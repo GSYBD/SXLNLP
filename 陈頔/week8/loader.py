@@ -26,6 +26,7 @@ class DataGenerator:
         self.load()
 
     def load(self):
+        # 保持测试集数据[input_id/questions, target/label]
         self.data = []
         # 保存训练集序列化数据 {label1:[input_id1,input_id2...],label2:[input_id1,input_id2...]...}
         self.knwb = defaultdict(list)
@@ -40,7 +41,7 @@ class DataGenerator:
                     questions = line["questions"]  # 获取问题列表  
                     label = line["target"]  # 获取标签  
                     for question in questions:  
-                        # 对每个问题进行编码，映射成向量  
+                        # 对每个问题进行编码  
                         input_id = self.encode_sentence(question)  
                         # 将编码后的数据转换为PyTorch的LongTensor  
                         input_id = torch.LongTensor(input_id)  
@@ -59,7 +60,9 @@ class DataGenerator:
                     input_id = torch.LongTensor(input_id)  
                     # 将标签转换为PyTorch的LongTensor，并映射为self.schema中的索引  
                     label_index = torch.LongTensor([self.schema[label]])  
-                    # 将编码后的问题和标签索引添加到测试集数据列表中  
+                    # 将编码后的问题和标签索引添加到测试集数据列表中
+                    # 测试和训练的逻辑不一样
+                    # 需要判断输入和真实target/label是否一致，一致才算测试集通过  
                     self.data.append([input_id, label_index]) 
         return
 
