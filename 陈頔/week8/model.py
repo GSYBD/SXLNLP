@@ -34,7 +34,10 @@ class SiameseNetwork(nn.Module):
     def __init__(self, config):
         super(SiameseNetwork, self).__init__()
         self.sentence_encoder = SentenceEncoder(config)
-        self.loss = nn.CosineEmbeddingLoss()
+        if config["loss_type"] == "cosine_embedding":
+            self.loss = nn.CosineEmbeddingLoss()
+        elif config["loss_type"] == "cosine_triplet":
+            self.loss = self.cosine_triplet_loss
 
     # 计算余弦距离  1-cos(a,b)
     # cos=1时两个向量相同，余弦距离为0；cos=0时，两个向量正交，余弦距离为1
@@ -54,21 +57,38 @@ class SiameseNetwork(nn.Module):
         return torch.mean(diff[diff.gt(0)]) #greater than
 
     #sentence : (batch_size, max_length)
-    def forward(self, sentence1, sentence2=None, target=None):
+    # def forward(self, sentence1, sentence2=None, target=None):
+    #     #同时传入两个句子
+    #     if sentence2 is not None:
+    #         vector1 = self.sentence_encoder(sentence1) #vec:(batch_size, hidden_size)
+    #         vector2 = self.sentence_encoder(sentence2)
+    #         #如果有标签，则计算loss
+    #         if target is not None:
+    #             return self.loss(vector1, vector2, target.squeeze())
+    #         #如果无标签，计算余弦距离
+    #         else:
+    #             return self.cosine_distance(vector1, vector2)
+    #     #单独传入一个句子时，认为正在使用向量化能力
+    #     else:
+    #         return self.sentence_encoder(sentence1)
+    def forward(self, sentence1, sentence2=None, sentence3=None, target=None):
         #同时传入两个句子
         if sentence2 is not None:
-            vector1 = self.sentence_encoder(sentence1) #vec:(batch_size, hidden_size)
+            vector1 = self.sentence_encoder(sentence1)  # vec:(batch_size, hidden_size)
             vector2 = self.sentence_encoder(sentence2)
-            #如果有标签，则计算loss
-            if target is not None:
-                return self.loss(vector1, vector2, target.squeeze())
-            #如果无标签，计算余弦距离
+            if sentence3 is None:
+                #如果有标签，则计算loss
+                if target is not None:
+                    return self.loss(vector1, vector2,target.squeeze())
+                #如果无标签，计算余弦距离
+                else:
+                    return self.cosine_distance(vector1, vector2)
             else:
-                return self.cosine_distance(vector1, vector2)
+                vector3 = self.sentence_encoder(sentence3)
+                return self.loss(vector1, vector2, vector3)
         #单独传入一个句子时，认为正在使用向量化能力
         else:
             return self.sentence_encoder(sentence1)
-
 
 def choose_optimizer(config, model):
     optimizer = config["optimizer"]

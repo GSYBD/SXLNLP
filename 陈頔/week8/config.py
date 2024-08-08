@@ -18,4 +18,5 @@ Config = {
     "positive_sample_rate":0.5,  #正样本比例
     "optimizer": "adam",
     "learning_rate": 1e-3,
+    "loss_type": "cosine_embedding", #cosine_embedding, cosine_triplet
 }

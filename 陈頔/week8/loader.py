@@ -27,28 +27,40 @@ class DataGenerator:
 
     def load(self):
         self.data = []
+        # 保存训练集序列化数据 {label1:[input_id1,input_id2...],label2:[input_id1,input_id2...]...}
         self.knwb = defaultdict(list)
         with open(self.path, encoding="utf8") as f:
-            for line in f:
-                line = json.loads(line)
-                #加载训练集
-                if isinstance(line, dict):
-                    self.data_type = "train"
-                    questions = line["questions"]
-                    label = line["target"]
-                    for question in questions:
-                        input_id = self.encode_sentence(question)
-                        input_id = torch.LongTensor(input_id)
-                        self.knwb[self.schema[label]].append(input_id)
-                #加载测试集
-                else:
-                    self.data_type = "test"
-                    assert isinstance(line, list)
-                    question, label = line
-                    input_id = self.encode_sentence(question)
-                    input_id = torch.LongTensor(input_id)
-                    label_index = torch.LongTensor([self.schema[label]])
-                    self.data.append([input_id, label_index])
+            for line in f:  
+                # 将每行数据从JSON字符串转换为Python对象  
+                line = json.loads(line)  
+                
+                # 加载训练集数据  
+                if isinstance(line, dict):  
+                    self.data_type = "train"  # 标记当前处理的是训练集数据  
+                    questions = line["questions"]  # 获取问题列表  
+                    label = line["target"]  # 获取标签  
+                    for question in questions:  
+                        # 对每个问题进行编码，映射成向量  
+                        input_id = self.encode_sentence(question)  
+                        # 将编码后的数据转换为PyTorch的LongTensor  
+                        input_id = torch.LongTensor(input_id)  
+                        # 根据标签在self.schema中的映射，将编码后的数据添加到对应的列表中  
+                        self.knwb[self.schema[label]].append(input_id)  
+                
+                # 加载测试集数据  
+                else:  
+                    self.data_type = "test"  # 标记当前处理的是测试集数据  
+                    # 断言当前行数据为列表类型，包含问题和标签  
+                    assert isinstance(line, list)  
+                    question, label = line  # 解包列表，获取问题和标签  
+                    # 对问题进行编码  
+                    input_id = self.encode_sentence(question)  
+                    # 将编码后的数据转换为PyTorch的LongTensor  
+                    input_id = torch.LongTensor(input_id)  
+                    # 将标签转换为PyTorch的LongTensor，并映射为self.schema中的索引  
+                    label_index = torch.LongTensor([self.schema[label]])  
+                    # 将编码后的问题和标签索引添加到测试集数据列表中  
+                    self.data.append([input_id, label_index]) 
         return
 
     def encode_sentence(self, text):
@@ -86,22 +98,34 @@ class DataGenerator:
     #正样本从随机一个标准问题中随机选取两个
     def random_train_sample(self):
         standard_question_index = list(self.knwb.keys())
-        #随机正样本
-        if random.random() <= self.config["positive_sample_rate"]:
-            p = random.choice(standard_question_index)
-            #如果选取到的标准问下不足两个问题，则无法选取，所以重新随机一次
+        if self.config["loss_type"] == "cosine_embedding":
+            #随机正样本
+            if random.random() <= self.config["positive_sample_rate"]:
+                p = random.choice(standard_question_index)
+                #如果选取到的标准问下不足两个问题，则无法选取，所以重新随机一次
+                if len(self.knwb[p]) < 2:
+                    return self.random_train_sample()
+                else:
+                    s1, s2 = random.sample(self.knwb[p], 2)
+                    return [s1, s2, torch.LongTensor([1])]
+            #随机负样本
+            else:
+                p, n = random.sample(standard_question_index, 2)
+                s1 = random.choice(self.knwb[p])
+                s2 = random.choice(self.knwb[n])
+                return [s1, s2, torch.LongTensor([-1])]
+        elif self.config["loss_type"] == "cosine_triplet":
+            # random.sample(population, k)：这个函数从指定的序列population中随机获取k个不重复的元素
+            p, n = random.sample(standard_question_index, 2)
+            # 如果选取到的标准问下不足两个问题，则重新随机一次
             if len(self.knwb[p]) < 2:
                 return self.random_train_sample()
             else:
-                s1, s2 = random.sample(self.knwb[p], 2)
-                return [s1, s2, torch.LongTensor([1])]
-        #随机负样本
-        else:
-            p, n = random.sample(standard_question_index, 2)
-            s1 = random.choice(self.knwb[p])
-            s2 = random.choice(self.knwb[n])
-            return [s1, s2, torch.LongTensor([-1])]
-
+                # 随机选取两个问题作为正样本
+                # 从self.knwb字典中键为p的值中随机选择两个不重复的元素,也就是在一个标准问下随机选择两个相似问
+                a, p = random.sample(self.knwb[p], 2) # a是anchor，p是positive
+                n = random.choice(self.knwb[n]) # n是negative，从另一个标准问下随机选择一个不相似问
+                return [a, p, n]
 
 
 #加载字表或词表
