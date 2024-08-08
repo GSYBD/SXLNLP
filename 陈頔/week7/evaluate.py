@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 import torch
-from homework_loader import load_data
+from loader import load_data
 
 """
 模型效果测试
@@ -10,8 +11,7 @@ class Evaluator:
         self.config = config
         self.model = model
         self.logger = logger
-        # self.valid_data = load_data(config["valid_data_path"], config, shuffle=False)
-        self.valid_data = load_data(config["my_val_data_path"], config)
+        self.valid_data = load_data(config["valid_data_path"], config, shuffle=False)
         self.stats_dict = {"correct":0, "wrong":0}  #用于存储测试结果
 
     def eval(self, epoch):
@@ -24,14 +24,14 @@ class Evaluator:
             input_ids, labels = batch_data   #输入变化时这里需要修改，比如多输入，多输出的情况
             with torch.no_grad():
                 pred_results = self.model(input_ids) #不输入labels，使用模型当前参数进行预测
-            self.write_stats(labels, pred_results)   # lyu: 将真实标签和预测结果进行对比，统计正确和错误的数量
+            self.write_stats(labels, pred_results)
         acc = self.show_stats()
         return acc
 
     def write_stats(self, labels, pred_results):
         assert len(labels) == len(pred_results)
         for true_label, pred_label in zip(labels, pred_results):
-            pred_label = torch.argmax(pred_label) # lyu: argmax返回的是最大值的索引
+            pred_label = torch.argmax(pred_label)
             if int(true_label) == int(pred_label):
                 self.stats_dict["correct"] += 1
             else:
