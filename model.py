@@ -3,194 +3,81 @@
 import torch
 import torch.nn as nn
 from torch.optim import Adam, SGD
-from transformers import BertModel
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 """
 建立网络模型结构
 """
 
-class TorchModel(nn.Module):
+class SentenceEncoder(nn.Module):
     def __init__(self, config):
-        super(TorchModel, self).__init__()
+        super(SentenceEncoder, self).__init__()
         hidden_size = config["hidden_size"]
         vocab_size = config["vocab_size"] + 1
-        class_num = config["class_num"]
-        model_type = config["model_type"]
-        num_layers = config["num_layers"]
-        self.use_bert = False
+        max_length = config["max_length"]
         self.embedding = nn.Embedding(vocab_size, hidden_size, padding_idx=0)
-        if model_type == "fast_text":
-            self.encoder = lambda x: x
-        elif model_type == "lstm":
-            self.encoder = nn.LSTM(hidden_size, hidden_size, num_layers=num_layers, batch_first=True)
-        elif model_type == "gru":
-            self.encoder = nn.GRU(hidden_size, hidden_size, num_layers=num_layers, batch_first=True)
-        elif model_type == "rnn":
-            self.encoder = nn.RNN(hidden_size, hidden_size, num_layers=num_layers, batch_first=True)
-        elif model_type == "cnn":
-            self.encoder = CNN(config)
-        elif model_type == "gated_cnn":
-            self.encoder = GatedCNN(config)
-        elif model_type == "stack_gated_cnn":
-            self.encoder = StackGatedCNN(config)
-        elif model_type == "rcnn":
-            self.encoder = RCNN(config)
-        elif model_type == "bert":
-            self.use_bert = True
-            self.encoder = BertModel.from_pretrained(config["pretrain_model_path"], return_dict=False)
-            hidden_size = self.encoder.config.hidden_size
-        elif model_type == "bert_lstm":
-            self.use_bert = True
-            self.encoder = BertLSTM(config)
-            hidden_size = self.encoder.bert.config.hidden_size
-        elif model_type == "bert_cnn":
-            self.use_bert = True
-            self.encoder = BertCNN(config)
-            hidden_size = self.encoder.bert.config.hidden_size
-        elif model_type == "bert_mid_layer":
-            self.use_bert = True
-            self.encoder = BertMidLayer(config)
-            hidden_size = self.encoder.bert.config.hidden_size
+        # self.lstm = nn.LSTM(hidden_size, hidden_size, batch_first=True, bidirectional=True)
+        self.layer = nn.Linear(hidden_size, hidden_size)
+        self.dropout = nn.Dropout(0.5)
 
-        self.classify = nn.Linear(hidden_size, class_num)
-        self.pooling_style = config["pooling_style"]
-        self.loss = nn.functional.cross_entropy  #loss采用交叉熵损失
+    #输入为问题字符编码
+    def forward(self, x):
+        x = self.embedding(x)
+        #使用lstm
+        # x, _ = self.lstm(x)
+        #使用线性层
+        x = self.layer(x)
+        x = nn.functional.max_pool1d(x.transpose(1, 2), x.shape[1]).squeeze()
+        return x
 
-    #当输入真实标签，返回loss值；无真实标签，返回预测值
-    def forward(self, x, target=None):
-        if self.use_bert:  # bert返回的结果是 (sequence_output, pooler_output)
-            #sequence_output:batch_size, max_len, hidden_size
-            #pooler_output:batch_size, hidden_size
-            x = self.encoder(x)
+
+class SiameseNetwork(nn.Module):
+    def __init__(self, config):
+        super(SiameseNetwork, self).__init__()
+        self.sentence_encoder = SentenceEncoder(config)
+        self.loss = nn.CosineEmbeddingLoss()
+
+    # 计算余弦距离  1-cos(a,b)
+    # cos=1时两个向量相同，余弦距离为0；cos=0时，两个向量正交，余弦距离为1
+    def cosine_distance(self, tensor1, tensor2):
+        tensor1 = torch.nn.functional.normalize(tensor1, dim=-1)
+        tensor2 = torch.nn.functional.normalize(tensor2, dim=-1)
+        cosine = torch.sum(torch.mul(tensor1, tensor2), axis=-1)    #cos值
+        return 1 - cosine
+
+    def cosine_triplet_loss(self, a, p, n, margin=None):
+        ap = self.cosine_distance(a, p)
+        an = self.cosine_distance(a, n)
+        if margin is None:
+            diff = ap - an + 0.1
         else:
-            x = self.embedding(x)  # input shape:(batch_size, sen_len)
-            x = self.encoder(x)  # input shape:(batch_size, sen_len, input_dim)
+            diff = ap - an + margin.squeeze()
+        return torch.mean(diff[diff.gt(0)]) #greater than
 
-        if isinstance(x, tuple):  #RNN类的模型会同时返回隐单元向量，我们只取序列结果
-            x = x[0]
-        #可以采用pooling的方式得到句向量
-        if self.pooling_style == "max":
-            self.pooling_layer = nn.MaxPool1d(x.shape[1])
+    def forward(self, sentence1, sentence2, sentence3):
+        vector1 = self.sentence_encoder(sentence1)
+        vector2 = self.sentence_encoder(sentence2)
+        vector3 = self.sentence_encoder(sentence3)
+        return self.cosine_triplet_loss(vector1, vector2, vector3)
+
+    #sentence : (batch_size, max_length)
+"""    def forward(self, sentence1, sentence2=None, target=None):  # 改造这段 使用triplet_loss训练
+        # 原cos_distance为两个句子加标签 用triplet_loss 则传输为三个句子 前两个相似 最后一个不相似
+        #同时传入两个句子
+        if sentence2 is not None:
+            vector1 = self.sentence_encoder(sentence1) #vec:(batch_size, hidden_size)
+            vector2 = self.sentence_encoder(sentence2)
+            #如果有标签，则计算loss
+            if target is not None:
+                return self.loss(vector1, vector2, target.squeeze())
+            #如果无标签，计算余弦距离
+            else:
+                return self.cosine_distance(vector1, vector2)
+        #单独传入一个句子时，认为正在使用向量化能力
         else:
-            self.pooling_layer = nn.AvgPool1d(x.shape[1])
-        x = self.pooling_layer(x.transpose(1, 2)).squeeze() #input shape:(batch_size, sen_len, input_dim)
-
-        #也可以直接使用序列最后一个位置的向量
-        # x = x[:, -1, :]
-        predict = self.classify(x)   #input shape:(batch_size, input_dim)
-        if target is not None:
-            return self.loss(predict, target.squeeze())
-        else:
-            return predict
+            return self.sentence_encoder(sentence1)"""
 
 
-class CNN(nn.Module):
-    def __init__(self, config):
-        super(CNN, self).__init__()
-        hidden_size = config["hidden_size"]
-        kernel_size = config["kernel_size"]
-        pad = int((kernel_size - 1)/2)
-        self.cnn = nn.Conv1d(hidden_size, hidden_size, kernel_size, bias=False, padding=pad)
 
-    def forward(self, x): #x : (batch_size, max_len, embeding_size)
-        return self.cnn(x.transpose(1, 2)).transpose(1, 2)
-
-class GatedCNN(nn.Module):
-    def __init__(self, config):
-        super(GatedCNN, self).__init__()
-        self.cnn = CNN(config)
-        self.gate = CNN(config)
-
-    def forward(self, x):
-        a = self.cnn(x)
-        b = self.gate(x)
-        b = torch.sigmoid(b)
-        return torch.mul(a, b)
-
-
-class StackGatedCNN(nn.Module):
-    def __init__(self, config):
-        super(StackGatedCNN, self).__init__()
-        self.num_layers = config["num_layers"]
-        self.hidden_size = config["hidden_size"]
-        #ModuleList类内可以放置多个模型，取用时类似于一个列表
-        self.gcnn_layers = nn.ModuleList(
-            GatedCNN(config) for i in range(self.num_layers)
-        )
-        self.ff_liner_layers1 = nn.ModuleList(
-            nn.Linear(self.hidden_size, self.hidden_size) for i in range(self.num_layers)
-        )
-        self.ff_liner_layers2 = nn.ModuleList(
-            nn.Linear(self.hidden_size, self.hidden_size) for i in range(self.num_layers)
-        )
-        self.bn_after_gcnn = nn.ModuleList(
-            nn.LayerNorm(self.hidden_size) for i in range(self.num_layers)
-        )
-        self.bn_after_ff = nn.ModuleList(
-            nn.LayerNorm(self.hidden_size) for i in range(self.num_layers)
-        )
-
-    def forward(self, x):
-        #仿照bert的transformer模型结构，将self-attention替换为gcnn
-        for i in range(self.num_layers):
-            gcnn_x = self.gcnn_layers[i](x)
-            x = gcnn_x + x  #通过gcnn+残差
-            x = self.bn_after_gcnn[i](x)  #之后bn
-            # # 仿照feed-forward层，使用两个线性层
-            l1 = self.ff_liner_layers1[i](x)  #一层线性
-            l1 = torch.relu(l1)               #在bert中这里是gelu
-            l2 = self.ff_liner_layers2[i](l1) #二层线性
-            x = self.bn_after_ff[i](x + l2)        #残差后过bn
-        return x
-
-
-class RCNN(nn.Module):
-    def __init__(self, config):
-        super(RCNN, self).__init__()
-        hidden_size = config["hidden_size"]
-        self.rnn = nn.RNN(hidden_size, hidden_size)
-        self.cnn = GatedCNN(config)
-
-    def forward(self, x):
-        x, _ = self.rnn(x)
-        x = self.cnn(x)
-        return x
-
-class BertLSTM(nn.Module):
-    def __init__(self, config):
-        super(BertLSTM, self).__init__()
-        self.bert = BertModel.from_pretrained(config["pretrain_model_path"], return_dict=False)
-        self.rnn = nn.LSTM(self.bert.config.hidden_size, self.bert.config.hidden_size, batch_first=True)
-
-    def forward(self, x):
-        x = self.bert(x)[0]
-        x, _ = self.rnn(x)
-        return x
-
-class BertCNN(nn.Module):
-    def __init__(self, config):
-        super(BertCNN, self).__init__()
-        self.bert = BertModel.from_pretrained(config["pretrain_model_path"], return_dict=False)
-        config["hidden_size"] = self.bert.config.hidden_size
-        self.cnn = CNN(config)
-
-    def forward(self, x):
-        x = self.bert(x)[0]
-        x = self.cnn(x)
-        return x
-
-class BertMidLayer(nn.Module):
-    def __init__(self, config):
-        super(BertMidLayer, self).__init__()
-        self.bert = BertModel.from_pretrained(config["pretrain_model_path"], return_dict=False)
-        self.bert.config.output_hidden_states = True
-
-    def forward(self, x):
-        layer_states = self.bert(x)[2]#(13, batch, len, hidden)
-        layer_states = torch.add(layer_states[-2], layer_states[-1])
-        return layer_states
-
-
-#优化器的选择
 def choose_optimizer(config, model):
     optimizer = config["optimizer"]
     learning_rate = config["learning_rate"]
@@ -202,16 +89,19 @@ def choose_optimizer(config, model):
 
 if __name__ == "__main__":
     from config import Config
-    # Config["class_num"] = 3
-    # Config["vocab_size"] = 20
-    # Config["max_length"] = 5
-    Config["model_type"] = "bert"
-    model = BertModel.from_pretrained(Config["pretrain_model_path"], return_dict=False)
-    x = torch.LongTensor([[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]])
-    sequence_output, pooler_output = model(x)
-    print(x[2], type(x[2]), len(x[2]))
+    Config["vocab_size"] = 10
+    Config["max_length"] = 4
+    model = SiameseNetwork(Config)
+    # s1 = torch.LongTensor([[1,2,3,0], [2,2,0,0]])
+    # s2 = torch.LongTensor([[1,2,3,4], [3,2,3,4]])
+    # l = torch.LongTensor([[1],[0]])
+    # y = model(s1, s2, l)
+    s1 = torch.LongTensor([[1,2,3,0], [2,2,0,0]])
+    s2 = torch.LongTensor([[1,2,3,4], [3,2,3,4]])
+    s3 = torch.LongTensor([[1,2,0,4], [0,2,3,1]])
+    y = model(s1, s2, s3)
 
 
-    # model = TorchModel(Config)
-    # label = torch.LongTensor([1,2])
-    # print(model(x, label))
+    print(y)
+
+    # print(model.state_dict())

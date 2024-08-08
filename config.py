@@ -5,21 +5,17 @@
 """
 
 Config = {
-    "model_path": "output",
-    "train_data_path": "D:\BaiduNetdiskDownload\八斗精品班\第七周 文本分类问题\week7 文本分类问题\data/train_50.csv",
-    "valid_data_path": "D:\BaiduNetdiskDownload\八斗精品班\第七周 文本分类问题\week7 文本分类问题\data/train_50.csv",
-    "vocab_path":"chars.txt",
-    "model_type":"bert_lstm",
-    "max_length": 30,
-    "hidden_size": 256,
-    "kernel_size": 3,
-    "num_layers": 2,
-    "epoch": 15,
-    "batch_size": 128,
-    "pooling_style":"max",
+    "model_path": "D:\BaiduNetdiskDownload\八斗精品班\第八周 文本匹配\week8 文本匹配问题\sentence_match_as_sentence_encoder\model_output",
+    "schema_path": "D:\BaiduNetdiskDownload\八斗精品班\第八周 文本匹配\week8 文本匹配问题\data/schema.json",
+    "train_data_path": "D:\BaiduNetdiskDownload\八斗精品班\第八周 文本匹配\week8 文本匹配问题\data/train.json",
+    "valid_data_path": "D:\BaiduNetdiskDownload\八斗精品班\第八周 文本匹配\week8 文本匹配问题\data/valid.json",
+    "vocab_path":"D:\BaiduNetdiskDownload\八斗精品班\第八周 文本匹配\week8 文本匹配问题/chars.txt",
+    "max_length": 20,
+    "hidden_size": 128,
+    "epoch": 10,
+    "batch_size": 32,
+    "epoch_data_size": 200,     #每轮训练中采样数量
+    "positive_sample_rate":0.5,  #正样本比例
     "optimizer": "adam",
     "learning_rate": 1e-3,
-    "pretrain_model_path":r"D:\BaiduNetdiskDownload\八斗精品班\第六周 预训练模型\bert-base-chinese",
-    "seed": 987
 }
-
