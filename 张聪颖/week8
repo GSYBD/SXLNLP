@@ -1,0 +1,15 @@
+import torch
+import torch.nn as nn
+
+# 简单的数字表示“文本”
+anchor = torch.tensor([1.0])    # Anchor: 一个基准点
+positive = torch.tensor([1.1])  # Positive: 与Anchor相似的点
+negative = torch.tensor([3.0])  # Negative: 与Anchor不相似的点
+
+# 定义三元组损失函数
+triplet_loss = nn.TripletMarginLoss(margin=1.0)
+
+# 计算损失
+loss = triplet_loss(anchor, positive, negative)
+
+print(f"Loss: {loss.item()}")
