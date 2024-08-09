@@ -2,3 +2,5 @@
 *.pt
 *.pth
 vocab.json
+output/
+__pycache__
