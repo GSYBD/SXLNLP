@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import time
 
 import torch
+import csv
 import random
 import os
 import numpy as np
@@ -63,13 +65,13 @@ def main(config):
                 logger.info("batch loss %f" % loss)
         logger.info("epoch average loss: %f" % np.mean(train_loss))
         acc = evaluator.eval(epoch)
-    # model_path = os.path.join(config["model_path"], "epoch_%d.pth" % epoch)
-    # torch.save(model.state_dict(), model_path)  #保存模型权重
+    model_path = os.path.join(config["model_path"], "epoch_%d.pth" % epoch)
+    torch.save(model.state_dict(), model_path)  #保存模型权重
     return acc
 
 
 if __name__ == "__main__":
-    main(Config)
+    # main(Config)
 
     # for model in ["cnn"]:
     #     Config["model_type"] = model
@@ -78,14 +80,39 @@ if __name__ == "__main__":
     # 对比所有模型
     # 中间日志可以关掉，避免输出过多信息
     # 超参数的网格搜索
-    for model in ["gated_cnn"]:
-        Config["model_type"] = model
-        for lr in [1e-3, 1e-4]:
-            Config["learning_rate"] = lr
-            for hidden_size in [128]:
-                Config["hidden_size"] = hidden_size
-                for batch_size in [64, 128]:
-                    Config["batch_size"] = batch_size
-                    for pooling_style in ["avg"]:
-                        Config["pooling_style"] = pooling_style
-                        print("最后一轮准确率：", main(Config), "当前配置：", Config)
+    # for model in ["gated_cnn"]:
+    #     Config["model_type"] = model
+    #     for lr in [1e-3, 1e-4]:
+    #         Config["learning_rate"] = lr
+    #         for hidden_size in [128]:
+    #             Config["hidden_size"] = hidden_size
+    #             for batch_size in [64, 128]:
+    #                 Config["batch_size"] = batch_size
+    #                 for pooling_style in ["avg"]:
+    #                     Config["pooling_style"] = pooling_style
+    #                     print("最后一轮准确率：", main(Config), "当前配置：", Config)
+
+
+
+ with open(r"D:\material\八斗\SXLNLP\乔淑瑞\week7\output\result.csv", "w", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        header = ["model_type", "learning_rate", "hidden_size", "batch_size", "pooling_style", "acc", "time"]
+        writer.writerow(header)
+        for model in ["cnn", "rnn", "bert", "lstm", "gru", "gated_cnn", "rcnn"]:
+            Config["model_type"] = model
+            start_time = time.time()
+            print(f"模型：{model}，开始时间：{start_time}")
+            for lr in [1e-3, 1e-4]:
+                Config["learning_rate"] = lr
+                if Config["model_type"] == "bert":
+                    hidden_size_list = [768]
+                else:
+                    hidden_size_list = [128, 256]
+                for hidden_size in hidden_size_list:
+                    Config["hidden_size"] = hidden_size
+                    for batch_size in [64, 128]:
+                        Config["batch_size"] = batch_size
+                        for pooling_style in ["avg", "max"]:
+                            Config["pooling_style"] = pooling_style
+                            print("最后一轮准确率：", main(Config), "当前配置：", Config)
+                            writer.writerow([model, lr, hidden_size, batch_size, pooling_style, main(Config), time.time() - start_time])
