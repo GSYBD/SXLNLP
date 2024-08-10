@@ -16,10 +16,7 @@ class DataGenerator:
     def __init__(self, data_path, config):
         self.config = config
         self.path = data_path
-        self.index_to_label = {0: '家居', 1: '房产', 2: '股票', 3: '社会', 4: '文化',
-                               5: '国际', 6: '教育', 7: '军事', 8: '彩票', 9: '旅游',
-                               10: '体育', 11: '科技', 12: '汽车', 13: '健康',
-                               14: '娱乐', 15: '财经', 16: '时尚', 17: '游戏'}
+        self.index_to_label = {0: '差评', 1: '好评'}
         self.label_to_index = dict((y, x) for x, y in self.index_to_label.items())
         self.config["class_num"] = len(self.index_to_label)
         if self.config["model_type"] == "bert":
@@ -33,10 +30,13 @@ class DataGenerator:
         self.data = []
         with open(self.path, encoding="utf8") as f:
             for line in f:
-                line = json.loads(line)
-                tag = line["tag"]
-                label = self.label_to_index[tag]
-                title = line["title"]
+                if line.startswith("0,"):
+                    label = 0
+                elif line.startswith("1,"):
+                    label = 1
+                else:
+                    continue
+                title = line[2:].strip()
                 if self.config["model_type"] == "bert":
                     input_id = self.tokenizer.encode(title, max_length=self.config["max_length"], pad_to_max_length=True)
                 else:
