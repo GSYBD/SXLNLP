@@ -1,148 +1,68 @@
-# -*- coding: utf-8 -*-
 
+# -*- coding: utf-8 -*-
 import json
-import re
-import os
 import torch
-import random
-import jieba
-import numpy as np
 from torch.utils.data import Dataset, DataLoader
-from collections import defaultdict
+from transformers import BertTokenizer
+import os
+
 """
 数据加载
 """
 
+import json
 
-class DataGenerator:
+class DataGenerator(Dataset):
     def __init__(self, data_path, config):
         self.config = config
         self.path = data_path
-        self.vocab = load_vocab(config["vocab_path"])
-        self.config["vocab_size"] = len(self.vocab)
-        self.schema = load_schema(config["schema_path"])
-        self.train_data_size = config["epoch_data_size"] #由于采取随机采样，所以需要设定一个采样数量，否则可以一直采
-        self.data_type = None  #用来标识加载的是训练集还是测试集 "train" or "test"
-        self.load()
+        bert_model_path = os.path.abspath(config["bert_path"])
+        self.tokenizer = BertTokenizer.from_pretrained(bert_model_path)
+        self.schema = self.load_schema(config["schema_path"])  # 确保这个方法存在
+        self.data = self.load_data()
 
-    def load(self):
-        self.data = []
-        self.knwb = defaultdict(list)
+    def load_schema(self, schema_path):
+        with open(schema_path, 'r', encoding='utf-8') as f:
+            schema = json.load(f)
+        return schema
+
+    def load_data(self):
+        # 加载数据的逻辑
+        pass
+
+
+    def load_data(self):
+        data = []
         with open(self.path, encoding="utf8") as f:
-            for line in f:
-                line = json.loads(line)
-                #加载训练集
-                if isinstance(line, dict):
-                    self.data_type = "train"
-                    questions = line["questions"]
-                    label = line["target"]
-                    for question in questions:
-                        input_id = self.encode_sentence(question)
-                        input_id = torch.LongTensor(input_id)
-                        self.knwb[self.schema[label]].append(input_id)
-                #加载测试集
-                else:
-                    self.data_type = "test"
-                    assert isinstance(line, list)
-                    question, label = line
-                    input_id = self.encode_sentence(question)
-                    input_id = torch.LongTensor(input_id)
-                    label_index = torch.LongTensor([self.schema[label]])
-                    self.data.append([input_id, label_index])
-        return
+            segments = f.read().split("\n\n")
+            for segment in segments:
+                sentence = []
+                labels = []
+                for line in segment.split("\n"):
+                    if line.strip() == "":
+                        continue
+                    char, label = line.split()
+                    sentence.append(char)
+                    labels.append(self.schema[label])
+                encoding = self.tokenizer("".join(sentence), truncation=True, padding='max_length', max_length=self.config["max_length"], return_tensors="pt")
+                input_ids = encoding['input_ids'].squeeze(0)
+                attention_mask = encoding['attention_mask'].squeeze(0)
+                labels = self.padding(labels, -1)
+                data.append([input_ids, attention_mask, torch.LongTensor(labels)])
+        return data
 
-    def encode_sentence(self, text):
-        input_id = []
-        if self.config["vocab_path"] == "words.txt":
-            for word in jieba.cut(text):
-                input_id.append(self.vocab.get(word, self.vocab["[UNK]"]))
-        else:
-            for char in text:
-                input_id.append(self.vocab.get(char, self.vocab["[UNK]"]))
-        input_id = self.padding(input_id)
-        return input_id
-
-    #补齐或截断输入的序列，使其可以在一个batch内运算
-    def padding(self, input_id):
+    def padding(self, input_id, pad_token=0):
         input_id = input_id[:self.config["max_length"]]
-        input_id += [0] * (self.config["max_length"] - len(input_id))
+        input_id += [pad_token] * (self.config["max_length"] - len(input_id))
         return input_id
 
     def __len__(self):
-        if self.data_type == "train":
-            return self.config["epoch_data_size"]
-        else:
-            assert self.data_type == "test", self.data_type
-            return len(self.data)
+        return len(self.data)
 
     def __getitem__(self, index):
-        if self.data_type == "train":
-            return self.random_train_sample() #随机生成一个训练样本
-        else:
-            return self.data[index]
+        return self.data[index]
 
-    #依照一定概率生成负样本或正样本
-    #负样本从随机两个不同的标准问题中各随机选取一个
-    #正样本从随机一个标准问题中随机选取两个
-    def random_train_sample(self):
-        standard_question_index = list(self.knwb.keys())
-
-        # 随机选择锚点问题
-        anchor_question = random.choice(standard_question_index)
-
-        # 确保锚点问题下有足够的样本
-        if len(self.knwb[anchor_question]) < 2:
-            return self.random_train_sample()  # 如果样本数量不足，递归调用
-
-        # 从锚点问题下随机选择一个样本作为锚点
-        anchor = random.choice(self.knwb[anchor_question])
-
-        # 随机选择一个正样本问题，确保其样本数量足够
-        positive_question = anchor_question
-        if len(self.knwb[positive_question]) < 2:
-            positive_question = random.choice(standard_question_index)
-            # 确保正样本问题下有足够的样本
-            if len(self.knwb[positive_question]) < 2:
-                return self.random_train_sample()  # 如果样本数量不足，递归调用
-
-        # 从正样本问题下随机选择一个样本
-        positive = random.choice(self.knwb[positive_question])
-
-        # 随机选择一个负样本问题，确保其不同于锚点问题
-        negative_question = random.choice([q for q in standard_question_index if q != anchor_question])
-        # 确保负样本问题下有足够的样本
-        if len(self.knwb[negative_question]) < 1:
-            return self.random_train_sample()  # 如果样本数量不足，递归调用
-
-        # 从负样本问题下随机选择一个样本
-        negative = random.choice(self.knwb[negative_question])
-
-        return [anchor, positive, negative]
-
-
-#加载字表或词表
-def load_vocab(vocab_path):
-    token_dict = {}
-    with open(vocab_path, encoding="utf8") as f:
-        for index, line in enumerate(f):
-            token = line.strip()
-            token_dict[token] = index + 1  #0留给padding位置，所以从1开始
-    return token_dict
-
-#加载schema
-def load_schema(schema_path):
-    with open(schema_path, encoding="utf8") as f:
-        return json.loads(f.read())
-
-#用torch自带的DataLoader类封装数据
 def load_data(data_path, config, shuffle=True):
     dg = DataGenerator(data_path, config)
     dl = DataLoader(dg, batch_size=config["batch_size"], shuffle=shuffle)
     return dl
-
-
-
-if __name__ == "__main__":
-    from config import Config
-    dg = DataGenerator("valid_tag_news.json", Config)
-    print(dg[1])
