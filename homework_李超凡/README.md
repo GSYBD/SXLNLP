@@ -1,5 +1,10 @@
 # 李超凡的课后作业
 
+## 2024.08.08 week8
+    1. 修改model文件loss函数新增传入三个句子时使用triplet √
+    2. 修改loader文件适配triplet损失函数√
+    3. 修改main文件使用triplet损失函数训练模型√
+
 ## 2024.08.01 week7
     1. NLP语言模型任务pipeline √
     2. 文本分类任务 √
