@@ -5,17 +5,20 @@
 """
 
 Config = {
-    "model_path": "D:\BaiduNetdiskDownload\八斗精品班\第八周 文本匹配\week8 文本匹配问题\sentence_match_as_sentence_encoder\model_output",
-    "schema_path": "D:\BaiduNetdiskDownload\八斗精品班\第八周 文本匹配\week8 文本匹配问题\data/schema.json",
-    "train_data_path": "D:\BaiduNetdiskDownload\八斗精品班\第八周 文本匹配\week8 文本匹配问题\data/train.json",
-    "valid_data_path": "D:\BaiduNetdiskDownload\八斗精品班\第八周 文本匹配\week8 文本匹配问题\data/valid.json",
-    "vocab_path":"D:\BaiduNetdiskDownload\八斗精品班\第八周 文本匹配\week8 文本匹配问题/chars.txt",
-    "max_length": 20,
-    "hidden_size": 128,
-    "epoch": 10,
-    "batch_size": 32,
-    "epoch_data_size": 200,     #每轮训练中采样数量
-    "positive_sample_rate":0.5,  #正样本比例
+    "model_path": "D:\BaiduNetdiskDownload\八斗精品班\第九周 序列标注\week9 序列标注问题\ner\model_output",
+    "schema_path": "D:\BaiduNetdiskDownload\八斗精品班\第九周 序列标注\week9 序列标注问题\ner\ner_data/schema.json",
+    "train_data_path": "D:\BaiduNetdiskDownload\八斗精品班\第九周 序列标注\week9 序列标注问题\ner\ner_data/train",
+    "valid_data_path": "D:\BaiduNetdiskDownload\八斗精品班\第九周 序列标注\week9 序列标注问题\ner\ner_data/test",
+    "vocab_path":"D:\BaiduNetdiskDownload\八斗精品班\第九周 序列标注\week9 序列标注问题\ner/chars.txt",
+    "max_length": 100,
+    "hidden_size": 256,
+    "num_layers": 2,
+    "epoch": 20,
+    "batch_size": 16,
     "optimizer": "adam",
     "learning_rate": 1e-3,
+    "use_crf": False,
+    "class_num": 9,
+    "bert_path": r"D:\BaiduNetdiskDownload\八斗精品班\第六周 预训练模型\bert-base-chinese"
 }
+
