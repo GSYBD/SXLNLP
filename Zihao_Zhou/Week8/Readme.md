@@ -1,0 +1,3 @@
+1.config文件中添加了使用triplet loss 开关
+2.loader文件中添加了anchor、positive和negative样本的选择
+3.model文件中添加了使用triplet loss的计算语句

@@ -1,0 +1,28 @@
+08/02/2024 23:05:09 - INFO - __main__ - ----------------------------第1种类型-------------------------
+08/02/2024 23:05:09 - INFO - __main__ - epoch 1 begin
+08/02/2024 23:05:09 - INFO - __main__ - batch loss 0.657748
+08/02/2024 23:05:13 - INFO - __main__ - batch loss 0.462374
+08/02/2024 23:05:17 - INFO - __main__ - epoch average loss: 0.418479
+08/02/2024 23:05:17 - INFO - __main__ - 开始测试第1轮模型效果：
+08/02/2024 23:05:18 - INFO - __main__ - 预测集合条目总量：2398
+08/02/2024 23:05:18 - INFO - __main__ - 预测正确条目：2107，预测错误条目：291
+08/02/2024 23:05:18 - INFO - __main__ - 预测准确率：0.878649
+08/02/2024 23:05:18 - INFO - __main__ - --------------------
+08/02/2024 23:05:18 - INFO - __main__ - 最后一轮准确率：0.8786488740617181, 当前配置：{'model_path': 'output', 'train_data_path': 'data/data_train.csv', 'valid_data_path': 'data/date_valid.csv', 'vocab_path': 'chars.txt', 'model_type': 'lstm', 'max_length': 50, 'hidden_size': 128, 'kernel_size': 3, 'num_layers': 2, 'epoch': 1, 'batch_size': 64, 'pooling_style': 'avg', 'optimizer': 'adam', 'learning_rate': 0.001, 'pretrain_model_path': 'bert-base-chinese', 'seed': 987, 'class_num': 2, 'vocab_size': 4623},耗时：8.980032920837402 
+
+
+
+08/02/2024 23:05:18 - INFO - __main__ - ----------------------------第2种类型-------------------------
+08/02/2024 23:05:18 - INFO - __main__ - epoch 1 begin
+08/02/2024 23:05:18 - INFO - __main__ - batch loss 0.691261
+08/02/2024 23:05:22 - INFO - __main__ - batch loss 0.353364
+08/02/2024 23:05:25 - INFO - __main__ - epoch average loss: 0.396729
+08/02/2024 23:05:25 - INFO - __main__ - 开始测试第1轮模型效果：
+08/02/2024 23:05:26 - INFO - __main__ - 预测集合条目总量：2398
+08/02/2024 23:05:26 - INFO - __main__ - 预测正确条目：2122，预测错误条目：276
+08/02/2024 23:05:26 - INFO - __main__ - 预测准确率：0.884904
+08/02/2024 23:05:26 - INFO - __main__ - --------------------
+08/02/2024 23:05:26 - INFO - __main__ - 最后一轮准确率：0.8849040867389492, 当前配置：{'model_path': 'output', 'train_data_path': 'data/data_train.csv', 'valid_data_path': 'data/date_valid.csv', 'vocab_path': 'chars.txt', 'model_type': 'lstm', 'max_length': 50, 'hidden_size': 128, 'kernel_size': 3, 'num_layers': 2, 'epoch': 1, 'batch_size': 64, 'pooling_style': 'max', 'optimizer': 'adam', 'learning_rate': 0.001, 'pretrain_model_path': 'bert-base-chinese', 'seed': 987, 'class_num': 2, 'vocab_size': 4623},耗时：8.878545999526978 
+
+
+

@@ -1,0 +1,3 @@
+作业文件夹：sentence_match_as_sentence_encoder
+
+任务：改表示形文本匹配代码，使用三元组损失函数训练。
