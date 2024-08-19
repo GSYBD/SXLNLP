@@ -1,0 +1,270 @@
+D:\dev_software\14_anaconda\anaconda\python.exe "D:/my_study/4_八斗AI/0_八斗精品班/9_第9周_序列标注问题/week9 序列标注问题/ner/main.py"
+Truncation was not explicitly activated but `max_length` is provided a specific value, please use `truncation=True` to explicitly truncate examples to max length. Defaulting to 'longest_first' truncation strategy. If you encode pairs of sequences (GLUE-style) with the tokenizer you can select this strategy more precisely by providing a specific strategy to `truncation`.
+D:\dev_software\14_anaconda\anaconda\Lib\site-packages\transformers\tokenization_utils_base.py:2760: FutureWarning: The `pad_to_max_length` argument is deprecated and will be removed in a future version, use `padding=True` or `padding='longest'` to pad to the longest sequence in the batch, or use `padding='max_length'` to pad to a max length. In this case, you can give a specific length with `max_length` (e.g. `max_length=45`) or leave max_length to None to pad to the maximal input size of the model (e.g. 512 for Bert).
+  warnings.warn(
+Truncation was not explicitly activated but `max_length` is provided a specific value, please use `truncation=True` to explicitly truncate examples to max length. Defaulting to 'longest_first' truncation strategy. If you encode pairs of sequences (GLUE-style) with the tokenizer you can select this strategy more precisely by providing a specific strategy to `truncation`.
+2024-08-16 10:06:58,656 - __main__ - INFO - epoch 1 begin
+We strongly recommend passing in an `attention_mask` since your input_ids may be padded. See https://huggingface.co/docs/transformers/troubleshooting#incorrect-output-when-padding-tokens-arent-masked.
+2024-08-16 10:06:58,954 - __main__ - INFO - batch loss 103.864693
+2024-08-16 10:07:12,487 - __main__ - INFO - batch loss 13.243400
+2024-08-16 10:07:25,946 - __main__ - INFO - batch loss 3.046013
+2024-08-16 10:07:25,946 - __main__ - INFO - epoch average loss: 21.574641
+2024-08-16 10:07:25,946 - __main__ - INFO - 开始测试第1轮模型效果：
+C:\Users\Allan Lyu\AppData\Roaming\Python\Python311\site-packages\torchcrf\__init__.py:305: UserWarning: where received a uint8 condition tensor. This behavior is deprecated and will be removed in a future version of PyTorch. Use a boolean condition instead. (Triggered internally at C:\cb\pytorch_1000000000000\work\aten\src\ATen\native\TensorCompare.cpp:530.)
+  score = torch.where(mask[i].unsqueeze(1), next_score, score)
+2024-08-16 10:07:28,585 - __main__ - INFO - PERSON类实体，准确率：0.568627, 召回率: 0.300518, F1: 0.393216
+2024-08-16 10:07:28,585 - __main__ - INFO - LOCATION类实体，准确率：0.711268, 召回率: 0.422594, F1: 0.530179
+2024-08-16 10:07:28,585 - __main__ - INFO - TIME类实体，准确率：0.565217, 召回率: 0.365169, F1: 0.443681
+2024-08-16 10:07:28,585 - __main__ - INFO - ORGANIZATION类实体，准确率：0.777777, 召回率: 0.147368, F1: 0.247785
+2024-08-16 10:07:28,585 - __main__ - INFO - Macro-F1: 0.403715
+2024-08-16 10:07:28,585 - __main__ - INFO - Micro-F1 0.439922
+2024-08-16 10:07:28,585 - __main__ - INFO - --------------------
+2024-08-16 10:07:28,585 - __main__ - INFO - epoch 2 begin
+2024-08-16 10:07:28,902 - __main__ - INFO - batch loss 8.061193
+2024-08-16 10:07:43,191 - __main__ - INFO - batch loss 11.048304
+2024-08-16 10:07:58,488 - __main__ - INFO - batch loss 17.915833
+2024-08-16 10:07:58,488 - __main__ - INFO - epoch average loss: 9.859138
+2024-08-16 10:07:58,488 - __main__ - INFO - 开始测试第2轮模型效果：
+2024-08-16 10:08:01,528 - __main__ - INFO - PERSON类实体，准确率：0.586466, 召回率: 0.404145, F1: 0.478523
+2024-08-16 10:08:01,528 - __main__ - INFO - LOCATION类实体，准确率：0.693122, 召回率: 0.548117, F1: 0.612145
+2024-08-16 10:08:01,528 - __main__ - INFO - TIME类实体，准确率：0.753968, 召回率: 0.533708, F1: 0.624995
+2024-08-16 10:08:01,528 - __main__ - INFO - ORGANIZATION类实体，准确率：0.628571, 召回率: 0.231579, F1: 0.338458
+2024-08-16 10:08:01,528 - __main__ - INFO - Macro-F1: 0.513530
+2024-08-16 10:08:01,528 - __main__ - INFO - Micro-F1 0.548817
+2024-08-16 10:08:01,528 - __main__ - INFO - --------------------
+2024-08-16 10:08:01,529 - __main__ - INFO - epoch 3 begin
+2024-08-16 10:08:01,872 - __main__ - INFO - batch loss 5.807535
+2024-08-16 10:08:17,331 - __main__ - INFO - batch loss 8.378238
+2024-08-16 10:08:32,072 - __main__ - INFO - batch loss 1.543167
+2024-08-16 10:08:32,072 - __main__ - INFO - epoch average loss: 6.857799
+2024-08-16 10:08:32,072 - __main__ - INFO - 开始测试第3轮模型效果：
+2024-08-16 10:08:34,774 - __main__ - INFO - PERSON类实体，准确率：0.625954, 召回率: 0.424870, F1: 0.506168
+2024-08-16 10:08:34,774 - __main__ - INFO - LOCATION类实体，准确率：0.703704, 召回率: 0.556485, F1: 0.621490
+2024-08-16 10:08:34,774 - __main__ - INFO - TIME类实体，准确率：0.729032, 召回率: 0.634831, F1: 0.678674
+2024-08-16 10:08:34,774 - __main__ - INFO - ORGANIZATION类实体，准确率：0.473684, 召回率: 0.284210, F1: 0.355258
+2024-08-16 10:08:34,774 - __main__ - INFO - Macro-F1: 0.540398
+2024-08-16 10:08:34,774 - __main__ - INFO - Micro-F1 0.573964
+2024-08-16 10:08:34,774 - __main__ - INFO - --------------------
+2024-08-16 10:08:34,774 - __main__ - INFO - epoch 4 begin
+2024-08-16 10:08:35,107 - __main__ - INFO - batch loss 3.610741
+2024-08-16 10:08:49,109 - __main__ - INFO - batch loss 7.097839
+2024-08-16 10:09:04,901 - __main__ - INFO - batch loss 6.133137
+2024-08-16 10:09:04,902 - __main__ - INFO - epoch average loss: 5.082765
+2024-08-16 10:09:04,902 - __main__ - INFO - 开始测试第4轮模型效果：
+2024-08-16 10:09:07,971 - __main__ - INFO - PERSON类实体，准确率：0.676259, 召回率: 0.487047, F1: 0.566260
+2024-08-16 10:09:07,971 - __main__ - INFO - LOCATION类实体，准确率：0.706806, 召回率: 0.564854, F1: 0.627902
+2024-08-16 10:09:07,971 - __main__ - INFO - TIME类实体，准确率：0.791667, 召回率: 0.640449, F1: 0.708070
+2024-08-16 10:09:07,971 - __main__ - INFO - ORGANIZATION类实体，准确率：0.500000, 召回率: 0.315789, F1: 0.387092
+2024-08-16 10:09:07,971 - __main__ - INFO - Macro-F1: 0.572331
+2024-08-16 10:09:07,971 - __main__ - INFO - Micro-F1 0.602094
+2024-08-16 10:09:07,971 - __main__ - INFO - --------------------
+2024-08-16 10:09:07,972 - __main__ - INFO - epoch 5 begin
+2024-08-16 10:09:08,316 - __main__ - INFO - batch loss 2.273932
+2024-08-16 10:09:25,296 - __main__ - INFO - batch loss 2.827472
+2024-08-16 10:09:41,504 - __main__ - INFO - batch loss 6.610909
+2024-08-16 10:09:41,504 - __main__ - INFO - epoch average loss: 3.583680
+2024-08-16 10:09:41,504 - __main__ - INFO - 开始测试第5轮模型效果：
+2024-08-16 10:09:44,743 - __main__ - INFO - PERSON类实体，准确率：0.673913, 召回率: 0.481865, F1: 0.561929
+2024-08-16 10:09:44,743 - __main__ - INFO - LOCATION类实体，准确率：0.710784, 召回率: 0.606695, F1: 0.654623
+2024-08-16 10:09:44,743 - __main__ - INFO - TIME类实体，准确率：0.851064, 召回率: 0.674157, F1: 0.752346
+2024-08-16 10:09:44,743 - __main__ - INFO - ORGANIZATION类实体，准确率：0.636364, 召回率: 0.368421, F1: 0.466662
+2024-08-16 10:09:44,743 - __main__ - INFO - Macro-F1: 0.608890
+2024-08-16 10:09:44,743 - __main__ - INFO - Micro-F1 0.632336
+2024-08-16 10:09:44,743 - __main__ - INFO - --------------------
+2024-08-16 10:09:44,744 - __main__ - INFO - epoch 6 begin
+2024-08-16 10:09:45,112 - __main__ - INFO - batch loss 2.391314
+2024-08-16 10:10:02,206 - __main__ - INFO - batch loss 1.998987
+2024-08-16 10:10:19,305 - __main__ - INFO - batch loss 0.196960
+2024-08-16 10:10:19,305 - __main__ - INFO - epoch average loss: 2.637456
+2024-08-16 10:10:19,305 - __main__ - INFO - 开始测试第6轮模型效果：
+2024-08-16 10:10:22,437 - __main__ - INFO - PERSON类实体，准确率：0.687500, 召回率: 0.512953, F1: 0.587532
+2024-08-16 10:10:22,437 - __main__ - INFO - LOCATION类实体，准确率：0.666667, 召回率: 0.619247, F1: 0.642077
+2024-08-16 10:10:22,437 - __main__ - INFO - TIME类实体，准确率：0.845070, 召回率: 0.674157, F1: 0.749995
+2024-08-16 10:10:22,437 - __main__ - INFO - ORGANIZATION类实体，准确率：0.615385, 召回率: 0.421053, F1: 0.499995
+2024-08-16 10:10:22,437 - __main__ - INFO - Macro-F1: 0.619900
+2024-08-16 10:10:22,437 - __main__ - INFO - Micro-F1 0.636928
+2024-08-16 10:10:22,437 - __main__ - INFO - --------------------
+2024-08-16 10:10:22,437 - __main__ - INFO - epoch 7 begin
+2024-08-16 10:10:22,866 - __main__ - INFO - batch loss 1.583323
+2024-08-16 10:10:38,948 - __main__ - INFO - batch loss 1.561446
+2024-08-16 10:10:54,989 - __main__ - INFO - batch loss 1.194290
+2024-08-16 10:10:54,989 - __main__ - INFO - epoch average loss: 1.747161
+2024-08-16 10:10:54,989 - __main__ - INFO - 开始测试第7轮模型效果：
+2024-08-16 10:10:58,143 - __main__ - INFO - PERSON类实体，准确率：0.668965, 召回率: 0.502591, F1: 0.573960
+2024-08-16 10:10:58,143 - __main__ - INFO - LOCATION类实体，准确率：0.688995, 召回率: 0.602510, F1: 0.642852
+2024-08-16 10:10:58,143 - __main__ - INFO - TIME类实体，准确率：0.849315, 召回率: 0.696629, F1: 0.765427
+2024-08-16 10:10:58,143 - __main__ - INFO - ORGANIZATION类实体，准确率：0.516129, 召回率: 0.336842, F1: 0.407638
+2024-08-16 10:10:58,143 - __main__ - INFO - Macro-F1: 0.597469
+2024-08-16 10:10:58,159 - __main__ - INFO - Micro-F1 0.626672
+2024-08-16 10:10:58,159 - __main__ - INFO - --------------------
+2024-08-16 10:10:58,159 - __main__ - INFO - epoch 8 begin
+2024-08-16 10:10:58,504 - __main__ - INFO - batch loss 1.279099
+2024-08-16 10:11:15,946 - __main__ - INFO - batch loss 0.641626
+2024-08-16 10:11:33,609 - __main__ - INFO - batch loss 0.919601
+2024-08-16 10:11:33,609 - __main__ - INFO - epoch average loss: 1.226820
+2024-08-16 10:11:33,609 - __main__ - INFO - 开始测试第8轮模型效果：
+2024-08-16 10:11:37,244 - __main__ - INFO - PERSON类实体，准确率：0.666667, 召回率: 0.487047, F1: 0.562869
+2024-08-16 10:11:37,244 - __main__ - INFO - LOCATION类实体，准确率：0.717073, 召回率: 0.615063, F1: 0.662157
+2024-08-16 10:11:37,244 - __main__ - INFO - TIME类实体，准确率：0.878378, 召回率: 0.730337, F1: 0.797541
+2024-08-16 10:11:37,244 - __main__ - INFO - ORGANIZATION类实体，准确率：0.576271, 召回率: 0.357895, F1: 0.441554
+2024-08-16 10:11:37,244 - __main__ - INFO - Macro-F1: 0.616030
+2024-08-16 10:11:37,244 - __main__ - INFO - Micro-F1 0.643874
+2024-08-16 10:11:37,244 - __main__ - INFO - --------------------
+2024-08-16 10:11:37,244 - __main__ - INFO - epoch 9 begin
+2024-08-16 10:11:37,651 - __main__ - INFO - batch loss 0.160606
+2024-08-16 10:11:55,553 - __main__ - INFO - batch loss 1.338125
+2024-08-16 10:12:13,185 - __main__ - INFO - batch loss 4.192642
+2024-08-16 10:12:13,185 - __main__ - INFO - epoch average loss: 0.968765
+2024-08-16 10:12:13,185 - __main__ - INFO - 开始测试第9轮模型效果：
+2024-08-16 10:12:16,805 - __main__ - INFO - PERSON类实体，准确率：0.671533, 召回率: 0.476684, F1: 0.557571
+2024-08-16 10:12:16,805 - __main__ - INFO - LOCATION类实体，准确率：0.725000, 召回率: 0.606695, F1: 0.660587
+2024-08-16 10:12:16,805 - __main__ - INFO - TIME类实体，准确率：0.909722, 召回率: 0.735955, F1: 0.813660
+2024-08-16 10:12:16,805 - __main__ - INFO - ORGANIZATION类实体，准确率：0.532258, 召回率: 0.347368, F1: 0.420377
+2024-08-16 10:12:16,805 - __main__ - INFO - Macro-F1: 0.613049
+2024-08-16 10:12:16,805 - __main__ - INFO - Micro-F1 0.642623
+2024-08-16 10:12:16,805 - __main__ - INFO - --------------------
+2024-08-16 10:12:16,805 - __main__ - INFO - epoch 10 begin
+2024-08-16 10:12:17,213 - __main__ - INFO - batch loss 1.479635
+2024-08-16 10:12:35,082 - __main__ - INFO - batch loss 1.123652
+2024-08-16 10:12:52,759 - __main__ - INFO - batch loss 0.660530
+2024-08-16 10:12:52,759 - __main__ - INFO - epoch average loss: 0.864675
+2024-08-16 10:12:52,759 - __main__ - INFO - 开始测试第10轮模型效果：
+2024-08-16 10:12:57,453 - __main__ - INFO - PERSON类实体，准确率：0.706294, 召回率: 0.523316, F1: 0.601186
+2024-08-16 10:12:57,453 - __main__ - INFO - LOCATION类实体，准确率：0.684685, 召回率: 0.635983, F1: 0.659431
+2024-08-16 10:12:57,453 - __main__ - INFO - TIME类实体，准确率：0.864865, 召回率: 0.719101, F1: 0.785271
+2024-08-16 10:12:57,453 - __main__ - INFO - ORGANIZATION类实体，准确率：0.529412, 召回率: 0.378947, F1: 0.441713
+2024-08-16 10:12:57,453 - __main__ - INFO - Macro-F1: 0.621900
+2024-08-16 10:12:57,453 - __main__ - INFO - Micro-F1 0.648518
+2024-08-16 10:12:57,453 - __main__ - INFO - --------------------
+2024-08-16 10:12:57,453 - __main__ - INFO - epoch 11 begin
+2024-08-16 10:12:57,862 - __main__ - INFO - batch loss 0.269028
+2024-08-16 10:13:15,782 - __main__ - INFO - batch loss 0.554851
+2024-08-16 10:13:33,698 - __main__ - INFO - batch loss 1.379726
+2024-08-16 10:13:33,698 - __main__ - INFO - epoch average loss: 0.624069
+2024-08-16 10:13:33,698 - __main__ - INFO - 开始测试第11轮模型效果：
+2024-08-16 10:13:37,357 - __main__ - INFO - PERSON类实体，准确率：0.662252, 召回率: 0.518135, F1: 0.581390
+2024-08-16 10:13:37,357 - __main__ - INFO - LOCATION类实体，准确率：0.692683, 召回率: 0.594142, F1: 0.639635
+2024-08-16 10:13:37,357 - __main__ - INFO - TIME类实体，准确率：0.870130, 召回率: 0.752809, F1: 0.807224
+2024-08-16 10:13:37,357 - __main__ - INFO - ORGANIZATION类实体，准确率：0.563636, 召回率: 0.326316, F1: 0.413329
+2024-08-16 10:13:37,357 - __main__ - INFO - Macro-F1: 0.610394
+2024-08-16 10:13:37,357 - __main__ - INFO - Micro-F1 0.640940
+2024-08-16 10:13:37,357 - __main__ - INFO - --------------------
+2024-08-16 10:13:37,362 - __main__ - INFO - epoch 12 begin
+2024-08-16 10:13:37,765 - __main__ - INFO - batch loss 0.324186
+2024-08-16 10:13:55,858 - __main__ - INFO - batch loss 0.551034
+2024-08-16 10:14:14,119 - __main__ - INFO - batch loss 0.918800
+2024-08-16 10:14:14,119 - __main__ - INFO - epoch average loss: 0.527623
+2024-08-16 10:14:14,119 - __main__ - INFO - 开始测试第12轮模型效果：
+2024-08-16 10:14:17,808 - __main__ - INFO - PERSON类实体，准确率：0.680000, 召回率: 0.528497, F1: 0.594747
+2024-08-16 10:14:17,808 - __main__ - INFO - LOCATION类实体，准确率：0.691244, 召回率: 0.627615, F1: 0.657890
+2024-08-16 10:14:17,808 - __main__ - INFO - TIME类实体，准确率：0.879195, 召回率: 0.735955, F1: 0.801218
+2024-08-16 10:14:17,808 - __main__ - INFO - ORGANIZATION类实体，准确率：0.563636, 召回率: 0.326316, F1: 0.413329
+2024-08-16 10:14:17,808 - __main__ - INFO - Macro-F1: 0.616796
+2024-08-16 10:14:17,808 - __main__ - INFO - Micro-F1 0.648898
+2024-08-16 10:14:17,808 - __main__ - INFO - --------------------
+2024-08-16 10:14:17,808 - __main__ - INFO - epoch 13 begin
+2024-08-16 10:14:18,248 - __main__ - INFO - batch loss 0.652389
+2024-08-16 10:14:36,837 - __main__ - INFO - batch loss 0.908980
+2024-08-16 10:14:54,958 - __main__ - INFO - batch loss 0.179634
+2024-08-16 10:14:54,958 - __main__ - INFO - epoch average loss: 0.395181
+2024-08-16 10:14:54,958 - __main__ - INFO - 开始测试第13轮模型效果：
+2024-08-16 10:14:58,597 - __main__ - INFO - PERSON类实体，准确率：0.661972, 召回率: 0.487047, F1: 0.561189
+2024-08-16 10:14:58,597 - __main__ - INFO - LOCATION类实体，准确率：0.724868, 召回率: 0.573222, F1: 0.640182
+2024-08-16 10:14:58,597 - __main__ - INFO - TIME类实体，准确率：0.873239, 召回率: 0.696629, F1: 0.774995
+2024-08-16 10:14:58,597 - __main__ - INFO - ORGANIZATION类实体，准确率：0.536232, 召回率: 0.389474, F1: 0.451215
+2024-08-16 10:14:58,597 - __main__ - INFO - Macro-F1: 0.606895
+2024-08-16 10:14:58,597 - __main__ - INFO - Micro-F1 0.628704
+2024-08-16 10:14:58,597 - __main__ - INFO - --------------------
+2024-08-16 10:14:58,597 - __main__ - INFO - epoch 14 begin
+2024-08-16 10:14:59,014 - __main__ - INFO - batch loss 0.749866
+2024-08-16 10:15:17,231 - __main__ - INFO - batch loss 0.147747
+2024-08-16 10:15:35,204 - __main__ - INFO - batch loss 1.061329
+2024-08-16 10:15:35,204 - __main__ - INFO - epoch average loss: 0.421859
+2024-08-16 10:15:35,204 - __main__ - INFO - 开始测试第14轮模型效果：
+2024-08-16 10:15:38,880 - __main__ - INFO - PERSON类实体，准确率：0.668874, 召回率: 0.523316, F1: 0.587204
+2024-08-16 10:15:38,880 - __main__ - INFO - LOCATION类实体，准确率：0.726829, 召回率: 0.623431, F1: 0.671166
+2024-08-16 10:15:38,880 - __main__ - INFO - TIME类实体，准确率：0.843137, 召回率: 0.724719, F1: 0.779451
+2024-08-16 10:15:38,880 - __main__ - INFO - ORGANIZATION类实体，准确率：0.576271, 召回率: 0.357895, F1: 0.441554
+2024-08-16 10:15:38,880 - __main__ - INFO - Macro-F1: 0.619844
+2024-08-16 10:15:38,880 - __main__ - INFO - Micro-F1 0.648856
+2024-08-16 10:15:38,880 - __main__ - INFO - --------------------
+2024-08-16 10:15:38,880 - __main__ - INFO - epoch 15 begin
+2024-08-16 10:15:39,281 - __main__ - INFO - batch loss 0.371125
+2024-08-16 10:15:57,220 - __main__ - INFO - batch loss 0.485624
+2024-08-16 10:16:15,053 - __main__ - INFO - batch loss 0.345634
+2024-08-16 10:16:15,053 - __main__ - INFO - epoch average loss: 0.341934
+2024-08-16 10:16:15,053 - __main__ - INFO - 开始测试第15轮模型效果：
+2024-08-16 10:16:18,735 - __main__ - INFO - PERSON类实体，准确率：0.662162, 召回率: 0.507772, F1: 0.574775
+2024-08-16 10:16:18,735 - __main__ - INFO - LOCATION类实体，准确率：0.681614, 召回率: 0.635983, F1: 0.658004
+2024-08-16 10:16:18,735 - __main__ - INFO - TIME类实体，准确率：0.858108, 召回率: 0.713483, F1: 0.779136
+2024-08-16 10:16:18,735 - __main__ - INFO - ORGANIZATION类实体，准确率：0.476923, 召回率: 0.326316, F1: 0.387495
+2024-08-16 10:16:18,735 - __main__ - INFO - Macro-F1: 0.599852
+2024-08-16 10:16:18,735 - __main__ - INFO - Micro-F1 0.633044
+2024-08-16 10:16:18,735 - __main__ - INFO - --------------------
+2024-08-16 10:16:18,735 - __main__ - INFO - epoch 16 begin
+2024-08-16 10:16:19,143 - __main__ - INFO - batch loss 0.169604
+2024-08-16 10:16:37,184 - __main__ - INFO - batch loss 0.396932
+2024-08-16 10:16:55,214 - __main__ - INFO - batch loss 0.203575
+2024-08-16 10:16:55,215 - __main__ - INFO - epoch average loss: 0.290398
+2024-08-16 10:16:55,215 - __main__ - INFO - 开始测试第16轮模型效果：
+2024-08-16 10:16:58,927 - __main__ - INFO - PERSON类实体，准确率：0.655405, 召回率: 0.502591, F1: 0.568910
+2024-08-16 10:16:58,927 - __main__ - INFO - LOCATION类实体，准确率：0.713568, 召回率: 0.594142, F1: 0.648397
+2024-08-16 10:16:58,928 - __main__ - INFO - TIME类实体，准确率：0.879433, 召回率: 0.696629, F1: 0.777424
+2024-08-16 10:16:58,928 - __main__ - INFO - ORGANIZATION类实体，准确率：0.522388, 召回率: 0.368421, F1: 0.432094
+2024-08-16 10:16:58,928 - __main__ - INFO - Macro-F1: 0.606706
+2024-08-16 10:16:58,928 - __main__ - INFO - Micro-F1 0.631741
+2024-08-16 10:16:58,928 - __main__ - INFO - --------------------
+2024-08-16 10:16:58,928 - __main__ - INFO - epoch 17 begin
+2024-08-16 10:16:59,335 - __main__ - INFO - batch loss 0.462959
+2024-08-16 10:17:17,457 - __main__ - INFO - batch loss 0.264704
+2024-08-16 10:17:35,424 - __main__ - INFO - batch loss 0.105652
+2024-08-16 10:17:35,425 - __main__ - INFO - epoch average loss: 0.270870
+2024-08-16 10:17:35,425 - __main__ - INFO - 开始测试第17轮模型效果：
+2024-08-16 10:17:39,135 - __main__ - INFO - PERSON类实体，准确率：0.664286, 召回率: 0.481865, F1: 0.558554
+2024-08-16 10:17:39,135 - __main__ - INFO - LOCATION类实体，准确率：0.707207, 召回率: 0.656904, F1: 0.681123
+2024-08-16 10:17:39,135 - __main__ - INFO - TIME类实体，准确率：0.851351, 召回率: 0.707865, F1: 0.773001
+2024-08-16 10:17:39,135 - __main__ - INFO - ORGANIZATION类实体，准确率：0.551724, 召回率: 0.336842, F1: 0.418296
+2024-08-16 10:17:39,135 - __main__ - INFO - Macro-F1: 0.607743
+2024-08-16 10:17:39,135 - __main__ - INFO - Micro-F1 0.641001
+2024-08-16 10:17:39,135 - __main__ - INFO - --------------------
+2024-08-16 10:17:39,136 - __main__ - INFO - epoch 18 begin
+2024-08-16 10:17:39,545 - __main__ - INFO - batch loss 0.067678
+2024-08-16 10:17:57,767 - __main__ - INFO - batch loss 0.389952
+2024-08-16 10:18:15,675 - __main__ - INFO - batch loss 0.339966
+2024-08-16 10:18:15,675 - __main__ - INFO - epoch average loss: 0.256857
+2024-08-16 10:18:15,675 - __main__ - INFO - 开始测试第18轮模型效果：
+2024-08-16 10:18:19,438 - __main__ - INFO - PERSON类实体，准确率：0.648649, 召回率: 0.497409, F1: 0.563045
+2024-08-16 10:18:19,438 - __main__ - INFO - LOCATION类实体，准确率：0.715000, 召回率: 0.598326, F1: 0.651476
+2024-08-16 10:18:19,438 - __main__ - INFO - TIME类实体，准确率：0.881119, 召回率: 0.707865, F1: 0.785042
+2024-08-16 10:18:19,438 - __main__ - INFO - ORGANIZATION类实体，准确率：0.555555, 召回率: 0.368421, F1: 0.443033
+2024-08-16 10:18:19,438 - __main__ - INFO - Macro-F1: 0.610649
+2024-08-16 10:18:19,439 - __main__ - INFO - Micro-F1 0.635420
+2024-08-16 10:18:19,439 - __main__ - INFO - --------------------
+2024-08-16 10:18:19,439 - __main__ - INFO - epoch 19 begin
+2024-08-16 10:18:19,844 - __main__ - INFO - batch loss 0.415831
+2024-08-16 10:18:38,241 - __main__ - INFO - batch loss 0.131413
+2024-08-16 10:18:56,329 - __main__ - INFO - batch loss 0.105591
+2024-08-16 10:18:56,329 - __main__ - INFO - epoch average loss: 0.218710
+2024-08-16 10:18:56,329 - __main__ - INFO - 开始测试第19轮模型效果：
+2024-08-16 10:19:00,129 - __main__ - INFO - PERSON类实体，准确率：0.653061, 召回率: 0.497409, F1: 0.564701
+2024-08-16 10:19:00,129 - __main__ - INFO - LOCATION类实体，准确率：0.707547, 召回率: 0.627615, F1: 0.665183
+2024-08-16 10:19:00,129 - __main__ - INFO - TIME类实体，准确率：0.878571, 召回率: 0.691011, F1: 0.773580
+2024-08-16 10:19:00,130 - __main__ - INFO - ORGANIZATION类实体，准确率：0.525424, 召回率: 0.326316, F1: 0.402593
+2024-08-16 10:19:00,130 - __main__ - INFO - Macro-F1: 0.601514
+2024-08-16 10:19:00,130 - __main__ - INFO - Micro-F1 0.633408
+2024-08-16 10:19:00,130 - __main__ - INFO - --------------------
+2024-08-16 10:19:00,130 - __main__ - INFO - epoch 20 begin
+2024-08-16 10:19:00,556 - __main__ - INFO - batch loss 0.092811
+2024-08-16 10:19:18,589 - __main__ - INFO - batch loss 0.069276
+2024-08-16 10:19:36,450 - __main__ - INFO - batch loss 0.054081
+2024-08-16 10:19:36,451 - __main__ - INFO - epoch average loss: 0.249484
+2024-08-16 10:19:36,451 - __main__ - INFO - 开始测试第20轮模型效果：
+2024-08-16 10:19:40,146 - __main__ - INFO - PERSON类实体，准确率：0.630769, 召回率: 0.424870, F1: 0.507735
+2024-08-16 10:19:40,146 - __main__ - INFO - LOCATION类实体，准确率：0.728643, 召回率: 0.606695, F1: 0.662095
+2024-08-16 10:19:40,146 - __main__ - INFO - TIME类实体，准确率：0.905797, 召回率: 0.702247, F1: 0.791134
+2024-08-16 10:19:40,146 - __main__ - INFO - ORGANIZATION类实体，准确率：0.542373, 召回率: 0.336842, F1: 0.415580
+2024-08-16 10:19:40,146 - __main__ - INFO - Macro-F1: 0.594136
+2024-08-16 10:19:40,146 - __main__ - INFO - Micro-F1 0.623878
+2024-08-16 10:19:40,146 - __main__ - INFO - --------------------
+
+Process finished with exit code 0
