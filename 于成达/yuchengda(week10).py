@@ -162,6 +162,7 @@ def train(corpus_path, save_weight=True):
             x, y = build_dataset(batch_size, vocab, window_size, corpus) #构建一组训练样本
             if torch.cuda.is_available():
                 x, y = x.cuda(), y.cuda()
+                ### 添加mask到GPU上，保证x, y, mask的数据都在同一GPU上边
                 mask_tensor = torch.from_numpy(np.tril(np.ones((x.shape[0], x.shape[1], x.shape[1])), 0)).cuda()
             optim.zero_grad()    #梯度归零
             loss = model(x, y, mask_tensor)   #计算loss
