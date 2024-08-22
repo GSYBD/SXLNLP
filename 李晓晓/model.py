@@ -3,72 +3,49 @@
 import torch
 import torch.nn as nn
 from torch.optim import Adam, SGD
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from torchcrf import CRF
 """
 建立网络模型结构
 """
 
-class SentenceEncoder(nn.Module):
+class TorchModel(nn.Module):
     def __init__(self, config):
-        super(SentenceEncoder, self).__init__()
+        super(TorchModel, self).__init__()
         hidden_size = config["hidden_size"]
-        vocab_size = config["vocab_size"] + 1
-        max_length = config["max_length"]
-        self.embedding = nn.Embedding(vocab_size, hidden_size, padding_idx=0)
-        # self.lstm = nn.LSTM(hidden_size, hidden_size, batch_first=True, bidirectional=True)
-        self.layer = nn.Linear(hidden_size, hidden_size)
-        self.dropout = nn.Dropout(0.5)
+        class_num = config["class_num"]
 
-    #输入为问题字符编码
-    def forward(self, x):
-        x = self.embedding(x)
-        #使用lstm
-        # x, _ = self.lstm(x)
-        #使用线性层
-        x = self.layer(x)
-        x = nn.functional.max_pool1d(x.transpose(1, 2), x.shape[1]).squeeze()
-        return x
+        bert = BertModel.from_pretrained(r"D:\AI课程\八斗AI\第九周 序列标注\ner - week9-homework\bert-base-chinese",
+                                         return_dict=False)
+        state_dict = bert.state_dict()
+        bert.eval()
+        x = np.array([2450, 15486, 102, 2110])  # 假想成4个字的句子
+        torch_x = torch.LongTensor([x])  # pytorch形式输入
+        seqence_output, pooler_output = bert(torch_x)
+        # self.embedding = nn.Embedding(vocab_size, hidden_size, padding_idx=0)
+        # self.layer = nn.LSTM(hidden_size, hidden_size, batch_first=True, bidirectional=True, num_layers=num_layers)
+        self.classify = nn.Linear(hidden_size * 2, class_num)
+        self.crf_layer = CRF(class_num, batch_first=True)
+        self.use_crf = config["use_crf"]
+        self.loss = torch.nn.CrossEntropyLoss(ignore_index=-1)  #loss采用交叉熵损失
 
+    #当输入真实标签，返回loss值；无真实标签，返回预测值
+    def forward(self, x, target=None):
+        x = self.embedding(x)  #input shape:(batch_size, sen_len)
+        x, _ = self.layer(x)      #input shape:(batch_size, sen_len, input_dim)
+        predict = self.classify(x) #ouput:(batch_size, sen_len, num_tags) -> (batch_size * sen_len, num_tags)
 
-class SiameseNetwork(nn.Module):
-    def __init__(self, config):
-        super(SiameseNetwork, self).__init__()
-        self.sentence_encoder = SentenceEncoder(config)
-        self.loss = nn.CosineEmbeddingLoss()
-
-    # 计算余弦距离  1-cos(a,b)
-    # cos=1时两个向量相同，余弦距离为0；cos=0时，两个向量正交，余弦距离为1
-    def cosine_distance(self, tensor1, tensor2):
-        tensor1 = torch.nn.functional.normalize(tensor1, dim=-1)
-        tensor2 = torch.nn.functional.normalize(tensor2, dim=-1)
-        cosine = torch.sum(torch.mul(tensor1, tensor2), axis=-1)
-        return 1 - cosine
-
-    def cosine_triplet_loss(self, a, p, n, margin=None):
-        ap = self.cosine_distance(a, p)
-        an = self.cosine_distance(a, n)
-        if margin is None:
-            diff = ap - an + 0.1
-        else:
-            diff = ap - an + margin.squeeze()
-        return torch.mean(diff[diff.gt(0)]) #greater than
-
-    #sentence : (batch_size, max_length)
-    def forward(self, sentence1, sentence2=None, sentence3=None,margin=None):
-        #同时传入3个句子
-        if sentence2 is not None and sentence3 is not None and margin is not None:
-            vector1 = self.sentence_encoder(sentence1) #vec:(batch_size, hidden_size)
-            vector2 = self.sentence_encoder(sentence2)
-            vector3 = self.sentence_encoder(sentence3)
-            #如果有标签，则计算loss
-            if target is not None:
-                return self.cosine_triplet_loss(vector1, vector2, vector3,margin)
-            #如果无标签，计算余弦距离
+        if target is not None:
+            if self.use_crf:
+                mask = target.gt(-1) 
+                return - self.crf_layer(predict, target, mask, reduction="mean")
             else:
-                return self.cosine_distance(vector1, vector2)
-        #单独传入一个句子时，认为正在使用向量化能力
+                #(number, class_num), (number)
+                return self.loss(predict.view(-1, predict.shape[-1]), target.view(-1))
         else:
-            return self.sentence_encoder(sentence1)
+            if self.use_crf:
+                return self.crf_layer.decode(predict)
+            else:
+                return predict
 
 
 def choose_optimizer(config, model):
@@ -82,12 +59,4 @@ def choose_optimizer(config, model):
 
 if __name__ == "__main__":
     from config import Config
-    Config["vocab_size"] = 10
-    Config["max_length"] = 4
-    model = SiameseNetwork(Config)
-    s1 = torch.LongTensor([[1,2,3,0], [2,2,0,0]])
-    s2 = torch.LongTensor([[1,2,3,4], [3,2,3,4]])
-    l = torch.LongTensor([[1],[0]])
-    y = model(s1, s2, l)
-    print(y)
-    # print(model.state_dict())
+    model = TorchModel(Config)
