@@ -16,7 +16,7 @@ Config = {
     "epoch": 20,
     "batch_size": 16,
     "optimizer": "adam",
-    "learning_rate": 1e-3,
+    "learning_rate": 1e-5,
     "use_crf": False,
     "class_num": 9,
     "bert_path": r"bert-base-chinese"
