@@ -85,10 +85,10 @@ class DataGenerator:
     def random_train_sample(self):
         standard_question_index = list(self.knwb.keys())
         idx1,idx2=random.sample(standard_question_index, 2)
-        s1=idx1
+        s1=random.sample(self.knwb[idx1],1)
         s2=random.sample(self.knwb[idx1],1)
         s3=random.sample(self.knwb[idx2],1)
-        return [s1,s2,s3]
+        return [s1[0],s2[0],s3[0]]
 
 
 #加载字表或词表
@@ -115,5 +115,8 @@ def load_data(data_path, config, shuffle=True):
 
 if __name__ == "__main__":
     from config import Config
-    dg = DataGenerator("valid_tag_news.json", Config)
-    print(dg[1])
+    # dg = DataGenerator("data/train.json", Config)
+    # print(dg[1])
+    train_data = load_data(Config["train_data_path"], Config)
+    for index, batch_data in enumerate(train_data):
+        print(index,len(batch_data))

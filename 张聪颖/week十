@@ -1,0 +1,47 @@
+import torch
+import torch.nn as nn
+from transformers import BertTokenizer, BertModel, BertConfig
+
+class SimpleAutoregressiveBERT(nn.Module):
+    def __init__(self):
+        super(SimpleAutoregressiveBERT, self).__init__()
+        # 加载预训练的BERT模型
+        self.bert = BertModel.from_pretrained("bert-base-uncased")
+        # 添加一个线性层，用于生成预测的下一个词
+        self.linear = nn.Linear(self.bert.config.hidden_size, self.bert.config.vocab_size)
+
+    def forward(self, input_ids, attention_mask=None):
+        # 通过BERT模型获取输出
+        outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
+        # 获取最后一层的隐藏状态
+        hidden_states = outputs.last_hidden_state
+        # 通过线性层将隐藏状态转换为词汇表的概率分布
+        logits = self.linear(hidden_states)
+        return logits
+
+# 初始化tokenizer
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+
+# 初始化模型
+model = SimpleAutoregressiveBERT()
+
+# 示例句子
+sentence = "The cat is on the"
+
+# 将句子转换为输入格式
+inputs = tokenizer(sentence, return_tensors="pt")
+input_ids = inputs["input_ids"]
+
+# 获取模型的预测结果
+logits = model(input_ids)
+
+# 预测的下一个词的概率分布
+print("Logits shape:", logits.shape)
+
+# 计算损失函数
+shift_logits = logits[:, :-1, :].contiguous()
+shift_labels = input_ids[:, 1:].contiguous()
+loss_fn = nn.CrossEntropyLoss()
+loss = loss_fn(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+
+print(f"Loss: {loss.item()}")

@@ -1,5 +1,9 @@
 # 李超凡的课后作业
 
+## 2024.08.16 week9
+    1. 修改ner任务文件，替换LSTM层为Bert,训练模型验证效果 √
+    2. 编写predict文件，调用模型执行NER任务 √
+
 ## 2024.08.08 week8
     1. 修改model文件loss函数新增传入三个句子时使用triplet √
     2. 修改loader文件适配triplet损失函数√
