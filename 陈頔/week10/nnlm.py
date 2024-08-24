@@ -29,12 +29,18 @@ class LanguageModel(nn.Module):
     def forward(self, x, y=None):
         if y is not None:
             #训练时，构建一个下三角的mask矩阵，让上下文之间没有交互
+            #torch.ones第二个和第三个维度大小相同，每个序列都会得到一个正方形矩阵
+            #torch.tril函数接受二维或更高的张量作为输入，其中输入张量的上三角部分被设置为0，
+            #下三角部分（包括对角线）保持不变，返回一个下三角矩阵，矩阵的左下角为1，其他为0
+            #当使用torch.ones来生成一个形状为(batch_size, sequence_length, sequence_length)的张量，
+            #并随后对该张量应用torch.tril函数时，实际上是在为批量中的每个序列创建一个形状为(sequence_length, sequence_length)的二维矩阵，并且这些矩阵都将被转换成下三角矩阵。
             mask = torch.tril(torch.ones((x.shape[0], x.shape[1], x.shape[1])))
             if torch.cuda.is_available():
                 mask = mask.cuda()
             # 取第一个输出作为分类的输入
             x, _ = self.bert(x, attention_mask=mask)
             y_pred = self.classify(x)   #output shape:(batch_size, vocab_size)
+            # 交叉熵函数需要传入一维张量，所以需要将y_pred和y都展平
             return self.loss(y_pred.view(-1, y_pred.shape[-1]), y.view(-1))
         else:
             #预测时，可以不使用mask
