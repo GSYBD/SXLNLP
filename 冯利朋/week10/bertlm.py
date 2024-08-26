@@ -22,7 +22,8 @@ class LanguageModel(nn.Module):
 
     def forward(self, x, y=None):
 
-        attention_mask = torch.tril(x)
+        # attention_mask = torch.tril(x)
+        attention_mask = torch.tril(torch.ones(x.shape[0], x.shape[1]))
         outputs, last_hidden_stats = self.bert(input_ids=x, attention_mask=attention_mask)
         y_pred = self.classify(outputs)
         if y is not None:
