@@ -14,7 +14,7 @@ class SFTModel(nn.Module):
 		super(SFTModel, self).__init__()
 		self.bert = BertModel.from_pretrained('../bert-base-chinese', return_dict=False)
 		self.classify = nn.Linear(768, vocab_size)
-		self.loss = nn.functional.cross_entropy
+		self.loss = nn.functional.cross_entropy(ignore_index=-100)
 	
 	def forward(self, x, mask=None, y=None):
 		if y is not None:
