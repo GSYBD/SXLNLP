@@ -1,0 +1,197 @@
+import json
+
+import torch
+import torch.nn as nn
+import numpy as np
+import math
+import random
+import os
+import re
+from transformers import BertModel
+from transformers import BertTokenizer
+
+"""
+基于pytorch的LSTM语言模型
+"""
+
+Config = {
+    "model_path": "model_output",
+    "bert_path": r"/Users/fugenliu/PycharmProjects/pythonProject/bert-base-chinese"
+}
+tokenizer = BertTokenizer.from_pretrained(Config["bert_path"])
+
+
+class LanguageModel(nn.Module):
+    def __init__(self, input_dim, vocab):
+        super(LanguageModel, self).__init__()
+        self.encoder = BertModel.from_pretrained(Config["bert_path"], return_dict=False)
+        hidden_size = self.encoder.config.hidden_size
+        self.classify = nn.Linear(hidden_size, vocab)
+        self.dropout = nn.Dropout(0.1)
+        self.loss = torch.nn.CrossEntropyLoss(ignore_index=-1)  # loss采用交叉熵损失
+
+    # 当输入真实标签，返回loss值；无真实标签，返回预测值
+    def forward(self, x, y=None, mask=None):
+        if y is not None:
+            x = self.encoder(x, attention_mask=mask)[0]
+            y_pred = self.classify(x)
+            return self.loss(y_pred.view(-1, y_pred.shape[-1]), y.view(-1))
+        else:
+            x = self.encoder(x)[0]
+            y_pred = self.classify(x)  # output shape:(batch_size, vocab_size)
+            return torch.softmax(y_pred, dim=-1)
+
+
+# 加载语料
+def load_file(path):
+    with open(path, encoding="utf8") as f:
+        data = json.load(f)
+    return data
+
+
+# 随机生成一个样本
+# 从文本中截取随机窗口，前n个字作为输入，最后一个字作为输出
+def build_sample(map_data, maxLen=100):
+    x1 = map_data["title"]
+    x2 = map_data["content"]
+    y = x1 + x2
+
+    input_ids_x = tokenizer.encode(x1, x2, padding='max_length', truncation="only_second", max_length=maxLen)
+    input_ids_y = tokenizer.encode(y, padding='max_length', truncation=True, max_length=maxLen)
+    input_ids_y[:len(x1)+1] = [-1] * (len(x1) + 1)
+
+    mask = build_mask(len(x1) + 1, maxLen)
+    return input_ids_x, input_ids_y, mask
+
+
+def build_mask(x, maxLen):
+    y = maxLen - x
+    left = torch.ones(x + y, x)
+    right_up = torch.zeros(x, y)
+    right_down = torch.tril(torch.ones(y, y))
+    right = torch.cat([right_up, right_down], dim=0)
+    mask = torch.cat([left, right], dim=1)
+    mask = mask.unsqueeze(0)
+    return mask
+
+
+# 建立数据集
+# sample_length 输入需要的样本数量。需要多少生成多少
+# vocab 词表
+# window_size 样本长度
+# corpus 语料字符串
+def build_dataset(data):
+    dataset_x = []
+    dataset_y = []
+    dataset_mask = torch.LongTensor([])
+    for i in range(len(data)):
+        x, y, mask = build_sample(data[i])
+        dataset_x.append(x)
+        dataset_y.append(y)
+        if i == 0:
+            dataset_mask = mask
+        else:
+            dataset_mask = torch.cat([dataset_mask, mask], dim=0)
+
+    return torch.LongTensor(dataset_x), torch.LongTensor(dataset_y), dataset_mask
+
+
+# 建立模型
+def build_model(vocab, char_dim):
+    model = LanguageModel(char_dim, vocab)
+    return model
+
+
+# 文本生成测试代码
+def generate_sentence(openings, model):
+    model.eval()
+    openings = tokenizer.encode(openings, add_special_tokens=False)
+    with torch.no_grad():
+        #生成文本超过30字则终止迭代
+        while len(openings) <= 50:
+            x = torch.LongTensor([openings])
+            if torch.cuda.is_available():
+                x = x.cuda()
+            y = model(x)[0][-1]
+            index = sampling_strategy(y)
+            openings.append(index)
+    return tokenizer.decode(openings)
+
+
+def sampling_strategy(prob_distribution):
+    if random.random() > 0.1:
+        strategy = "greedy"
+    else:
+        strategy = "sampling"
+    if strategy == "greedy":
+        return int(torch.argmax(prob_distribution))
+    elif strategy == "sampling":
+        prob_distribution = prob_distribution.cpu().numpy()
+        return np.random.choice(list(range(len(prob_distribution))), p=prob_distribution)
+
+
+# 计算文本ppl
+def calc_perplexity(sentence, model, vocab, window_size):
+    prob = 0
+    model.eval()
+    with torch.no_grad():
+        for i in range(1, len(sentence)):
+            start = max(0, i - window_size)
+            window = sentence[start:i]
+            x = [vocab.get(char, vocab["<UNK>"]) for char in window]
+            x = torch.LongTensor([x])
+            target = sentence[i]
+            target_index = vocab.get(target, vocab["<UNK>"])
+            if torch.cuda.is_available():
+                x = x.cuda()
+            pred_prob_distribute = model(x)[0][-1]
+            target_prob = pred_prob_distribute[target_index]
+            prob += math.log(target_prob, 10)
+    return 2 ** (prob * (-1 / len(sentence)))
+
+
+def train(corpus_path, save_weight=True):
+    epoch_num = 20  # 训练轮数
+    batch_size = 64  # 每次训练样本个数
+    train_sample = 10000  # 每轮训练总共训练的样本总数
+    char_dim = 768  # 每个字的维度
+    window_size = 10  # 样本文本长度
+    vocab_size = 21128  # bert模型词库大小
+    data = load_file(corpus_path)  # 加载语料
+    xs,ys,masks = build_dataset(data)
+    model = build_model(vocab_size, char_dim)  # 建立模型
+    if torch.cuda.is_available():
+        model = model.cuda()
+    optim = torch.optim.Adam(model.parameters(), lr=0.0001)  # 建立优化器
+    for epoch in range(epoch_num):
+        model.train()
+        watch_loss = []
+        for batch in range(int(len(xs) / batch_size)):
+            x = xs[batch * batch_size:(batch + 1) * batch_size]
+            y = ys[batch * batch_size:(batch + 1) * batch_size]
+            mask = masks[batch * batch_size:(batch + 1) * batch_size]
+            # x, y,mask = build_dataset(batch_size, window_size, corpus)  # 构建一组训练样本
+            if torch.cuda.is_available():
+                x, y = x.cuda(), y.cuda()
+            optim.zero_grad()  # 梯度归零
+            loss = model(x, y,mask)  # 计算loss
+            loss.backward()  # 计算梯度
+            optim.step()  # 更新权重
+            watch_loss.append(loss.item())
+        print("=========\n第%d轮平均loss:%f" % (epoch + 1, np.mean(watch_loss)))
+        print(generate_sentence("顶秀美泉之夜消夏音乐季燃情启幕", model))
+        print(generate_sentence("五招玩转信用卡境外消费", model))
+    if not save_weight:
+        return
+    else:
+        base_name = os.path.basename(corpus_path).replace("txt", "pth")
+        model_path = os.path.join("model", base_name)
+        torch.save(model.state_dict(), model_path)
+        return
+
+
+if __name__ == "__main__":
+    # build_vocab_from_corpus("corpus/all.txt")
+    train("./data/sample_data.json", False)
+    # data = load_file("./data/sample_data.json")
+    # build_dataset(data)
