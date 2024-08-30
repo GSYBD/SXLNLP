@@ -44,5 +44,5 @@ def predict(model,config,sentence):
 
 
 if __name__ == "__main__":
-    Config["model_path"] = r"邓家骏\week9\ner\model_output\num_layer_12-epoch_25-use_crf_True-learning_rate_1e-05.pth"
+    Config["model_path"] = r"D:\code\week9\ner\model_output\num_layer_12-epoch_25-use_crf_True-learning_rate_1e-05.pth"
     main(Config)
