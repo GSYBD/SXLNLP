@@ -1,1 +1,1 @@
-This is tutorial for week 7 -- 电商文本分类
+This is a content classification project based on comments...[Summer_Intern_App](..%2F..%2F..%2F..%2F..%2FLibrary%2FCloudStorage%2FOneDrive-UniversityofGlasgow%2FSummer_Intern_App)
