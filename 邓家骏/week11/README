@@ -1,0 +1,18 @@
+任务：实现sft。
+
+具体实现：
+1. 每个样本单独mask(build_sample改)
+    mask = attention_mask + padding_mask
+2. 预测一个字一个字出来的，直接padding_mask就好。
+3. 构建的样本：
+    x = x + y + pad
+    y_true = (pad.x + y + pad) [1:max_length + 1]
+    ps:y_true 取自x，但需要左挪一个位置。
+4. cross_entropy_loss 加mask， mask值为0(pad的值)
+
+疑惑/备忘：
+1. 理解一遍gpt的训练方式，用纸笔写一下。
+2. 有叠字惩罚算loss的方法吗？
+
+记录：
+1.bert 的中文分词，空格没有对应token向量。(decode，encode后，自己手写样本好像更顺手。)

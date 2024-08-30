@@ -1,0 +1,32 @@
+因为没时间手写，暂留这个文档做备注
+当前：
+根据课件提供的代码修改，能出结果就行
+写个数据处理的py，统计，按统计结果分train,valid两个文件输出
+
+后补：
+1.理解每个代码文件具体做什么，怎么实现，总结成文档/备注就好。
+2.每轮训练应该记录(loss,acc)
+
+记录疑惑：
+
+训练集相关：
+    当正负样本量级相差不太大的时候，我应该再平衡一下吗？阈值是多少？
+    A：gpt说1:1 到 1:10 都可以。
+
+
+loader.py
+    1. 第78行，load_data函数
+        1.1 自己已经写了datagenerator，为什么将它的对象传入dataloader。
+        1.2 datagenerateor并没有继承（dataset），那直接向dataloader传入datagenerateor对象是什么意思
+        1.3 datagenerateor对象是什么？或者也是有个__len__，__getitem__就够了？
+    
+    2. 分词部分
+       预训练有自己的词库，在BertTokenizer.from_pretrained直接读自己的模型文件夹就好。
+       其他的用自己词表，自己实现分词。
+       
+
+modal.py
+    1. fastText为什么直接x -> x 
+    A: fast的计算逻辑：x -> embedding -> mean pooling -> label.
+
+

@@ -33,6 +33,7 @@ class Evaluator:
             input_id, labels = batch_data   #输入变化时这里需要修改，比如多输入，多输出的情况
             with torch.no_grad():
                 pred_results = self.model(input_id) #不输入labels，使用模型当前参数进行预测
+                # print('pred_results', pred_results, pred_results.shape)
             # 遍历self.valid_data，这个经过loader转换完变成[input_id, labels]准备了输入编码和真实标签
             # 预测结果pred_results把编码后的句子送入模型，真实标签labels
             # sentences对应loader当前处理的原句（未编码直接存储）
@@ -44,7 +45,7 @@ class Evaluator:
         assert len(labels) == len(pred_results) == len(sentences)
         # 不考虑crf的场景，只有发射矩阵，也就是每个预测类别里找最高的，
         # 比如3个字概率结果是[0.1 0.4 0.3]、[0.3 0.1 0.1] [0.1 0.3 0.6]
-        # pred_results中应该是个整数序列，如果从0开始，应该是[1 0 2]，代表每个字所处的类别
+        # pred_results是9个概率分布，pred_label中应该是个整数序列，如果从0开始，应该是[1 0 2]，代表每个字所处的类别
         # 因为在loader中已经把label的字母标签转成schema中定义的数字，所以每个字中的概率也是按序基于数字类别
         if not self.config["use_crf"]:
             pred_results = torch.argmax(pred_results, dim=-1)
@@ -52,11 +53,13 @@ class Evaluator:
             if not self.config["use_crf"]:
                 pred_label = pred_label.cpu().detach().tolist()
             true_label = true_label.cpu().detach().tolist()
+            print('pred_label', pred_label)
             # 用crf的话，会自动帮你把上面的序列重写，生成的也是[1 0 2]这种序列
             # 这里的true和pred label都是每句话中每个字所属的类别序列
             true_entities = self.decode(sentence, true_label)
             pred_entities = self.decode(sentence, pred_label)
-
+            print('true_entities', true_entities)
+            print('pred_entities', pred_entities)
             # 正确率 = 识别出的正确实体数 / 识别出的实体数
             # 召回率 = 识别出的正确实体数 / 样本的实体数
             for key in ["PERSON", "LOCATION", "TIME", "ORGANIZATION"]:
