@@ -85,8 +85,6 @@ def build_sample(corpus,config):
 
 #建立数据集
 #sample_length 输入需要的样本数量。需要多少生成多少
-#vocab 词表
-#window_size 样本长度
 #corpus 语料字符串
 def build_dataset(sample_length,corpus,config):
     dataset_x = []
@@ -109,10 +107,10 @@ def generate_sentence(openings, model, config):
     model.eval()
     with torch.no_grad():
         pred_char = ""
-        #生成了换行符，或生成文本超过30字则终止迭代
+        #生成了换行符，或生成文本超过100字则终止迭代
         while len(openings) <= 100:
-            # 为什么是加上一轮结果再预测，而不是这一轮预测后直接添加，再往下轮判断是否继续。
-            # 因为训练数据和样本都是max_length。如果当前预测后直接相加，y_pred长度就是max_length+1了。
+            # Q:为什么是加上一轮结果再预测，而不是这一轮预测后直接添加，再往下轮判断是否继续。
+            # A:因为训练数据和样本都是max_length。如果当前预测后直接相加，y_pred长度就是max_length+1了。
             openings += pred_char
             encoded_inputs = tokenizer(openings, padding='max_length', max_length=config["max_length"] , truncation=True, return_tensors="pt",add_special_tokens=False)
             x = encoded_inputs['input_ids']
