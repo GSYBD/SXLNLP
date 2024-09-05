@@ -1,0 +1,156 @@
+import os
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+
+import json
+import torch
+import torch.nn as nn
+import numpy as np
+import math
+import random
+import os
+import re
+from transformers import BertTokenizer, BertModel
+from torch.utils.data import DataLoader
+
+class LanguageModel(nn.Module):
+    def __init__(self, hidden_size, vocab_size, pretrain_model_path):
+        super(LanguageModel, self).__init__()
+        self.bert = BertModel.from_pretrained(pretrain_model_path, return_dict=False)
+        self.classify = nn.Linear(hidden_size, vocab_size)
+        self.loss = nn.functional.cross_entropy
+
+    def forward(self, x, y=None, mask=None):
+        if y is not None:
+            x, _ = self.bert(x, attention_mask=mask)
+            y_pred = self.classify(x)
+            # 打印调试信息
+            print(f"y_pred shape: {y_pred.shape}, y shape: {y.shape}")
+            # 确保 y_pred 和 y 的形状匹配
+            y_pred = y_pred.view(-1, y_pred.shape[-1])  # (batch_size * sequence_length, vocab_size)
+            y = y.view(-1)  # (batch_size * sequence_length)
+            return self.loss(y_pred, y)
+        else:
+            x, _ = self.bert(x)
+            y_pred = self.classify(x)
+            return torch.softmax(y_pred, dim=-1)
+
+def load_corpus(path):
+    title_list = []
+    content_list = []
+    with open(path, encoding="utf8") as f:
+        for line in f:
+            line = json.loads(line)
+            title_list.append(line["title"])
+            content_list.append(line["content"])
+    return [title_list, content_list]
+
+def build_dataset(sample_length, tokenizer, corpus, max_len, valid_flag=False):
+    dataset = []
+    for _ in range(sample_length):
+        dataset.append(build_sample(tokenizer, corpus, max_len, valid_flag))
+    return DataLoader(dataset, batch_size=128, shuffle=True, num_workers=0)
+
+def create_mask(question_size, answer_size):
+    len_s1 = question_size + 2
+    len_s2 = answer_size + 1
+    mask = torch.ones(len_s1 + len_s2, len_s1 + len_s2)
+    for i in range(len_s1):
+        mask[i, len_s1:] = 0
+    for i in range(len_s2):
+        mask[len_s1 + i, len_s1 + i + 1:] = 0
+    return mask
+
+def pad_mask(tensor, target_shape):
+    height, width = tensor.shape
+    target_height, target_width = target_shape
+    result = torch.zeros(target_shape, dtype=tensor.dtype, device=tensor.device)
+    h_end = min(height, target_height)
+    w_end = min(width, target_width)
+    result[:h_end, :w_end] = tensor[:h_end, :w_end]
+    return result
+
+def build_sample(tokenizer, corpus, max_len, valid_flag=False):
+    x_list, y_list = corpus
+    random_index = random.randint(0, len(x_list) - 1)
+    x = x_list[random_index]
+    if valid_flag:
+        print(x)
+    y = y_list[random_index]
+    input_ids_x = tokenizer.encode(x, add_special_tokens=False)
+    input_ids_y = tokenizer.encode(y, add_special_tokens=False)
+    pad_x = [tokenizer.cls_token_id] + input_ids_x + [tokenizer.sep_token_id] + input_ids_y
+    pad_y = len(input_ids_x) * [-1] + [-1] + input_ids_y
+    pad_x = pad_x[:max_len] + [0] * (max_len - len(pad_x))
+    pad_y = pad_y[:max_len] + [0] * (max_len - len(pad_y))
+    mask = create_mask(len(input_ids_x), len(input_ids_y))
+    mask = pad_mask(mask, (max_len, max_len))
+    return [torch.LongTensor(pad_x), torch.LongTensor(pad_y), mask]
+
+def build_model(vocab_size, char_dim):
+    model = LanguageModel(char_dim, vocab_size, r"D:\22807\Desktop\LearnPython\我的练习和作业\bert-base-chinese")
+    return model
+
+def sampling_strategy(prob_distribution):
+    if random.random() > 0.1:
+        strategy = "greedy"
+    else:
+        strategy = "sampling"
+    if strategy == "greedy":
+        return int(torch.argmax(prob_distribution))
+    elif strategy == "sampling":
+        prob_distribution = prob_distribution.cpu().numpy()
+        return np.random.choice(list(range(len(prob_distribution))), p=prob_distribution)
+
+def evaluate(openings, model, tokenizer, corpus):
+    model.eval()
+    openings = tokenizer.encode(openings)
+    with torch.no_grad():
+        while len(openings) <= 50:
+            x = torch.LongTensor([openings])
+            if torch.cuda.is_available():
+                x = x.cuda()
+            y_pred = model(x)[0][-1]
+            index = sampling_strategy(y_pred)
+            openings.append(index)
+    return tokenizer.decode(openings)
+
+def train(corpus_path, save_weight=True):
+    epoch_num = 15
+    batch_size = 128
+    train_sample = 1000
+    char_dim = 768
+    tokenizer = BertTokenizer.from_pretrained(r"D:\22807\Desktop\LearnPython\我的练习和作业\bert-base-chinese")
+    vocab_size = 21128
+    max_len = 50
+    corpus = load_corpus(corpus_path)
+    model = build_model(vocab_size, char_dim)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
+    optim = torch.optim.Adam(model.parameters(), lr=0.001)
+    dataset = build_dataset(train_sample, tokenizer, corpus, max_len)
+    print("文本词表模型加载完毕，开始训练")
+    for epoch in range(epoch_num):
+        model.train()
+        watch_loss = []
+        for x, y, mask in dataset:
+            x, y, mask = x.to(device), y.to(device), mask.to(device)
+            optim.zero_grad()
+            loss = model(x, y, mask)
+            loss.backward()
+            optim.step()
+            watch_loss.append(loss.item())
+        print("=========\n第%d轮平均loss:%f" % (epoch + 1, np.mean(watch_loss)))
+        result1 = evaluate("阿根廷歹徒抢服装尺码不对拿回店里换", model, tokenizer, corpus)
+        print(result1)
+    if not save_weight:
+        return
+    else:
+        base_name = os.path.basename(corpus_path).replace("txt", "pth")
+        model_path = os.path.join("model", base_name)
+        torch.save(model.state_dict(), model_path)
+        return
+
+if __name__ == "__main__":
+    print(torch.cuda.is_available())
+    print(torch.cuda.get_device_name(0))
+    train("sample_data.json", False)
