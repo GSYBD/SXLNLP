@@ -28,19 +28,10 @@ class LanguageModel(nn.Module):
     #当输入真实标签，返回loss值；无真实标签，返回预测值
     def forward(self, x, y=None):
         # 添加masked attention
-        seq_length = x.size(1)
-        for i in range(seq_length):
-            attention_mask = torch.ones_like(x)
-            attention_mask[:, i+1:] = 0
-            tmp = self.encoder(x, attention_mask=attention_mask)[0][:, i]
-            # add new dimension to axis 1
-            tmp = tmp.unsqueeze(1)
-            if i == 0:
-                result = tmp
-            else:
-                result = torch.cat((result, tmp), dim=1)
-            # result[:, i] = self.encoder(x, attention_mask=attention_mask)[0][:, i]
-        x = result
+        attention_mask = torch.tril(torch.ones(x.shape[0], x.shape[1], x.shape[1]))
+        if torch.cuda.is_available():
+            attention_mask = attention_mask.cuda()
+        x = self.encoder(x, attention_mask=attention_mask)[0]
         y_pred = self.classify(x)   #output shape:(batch_size, vocab_size)
         if y is not None:
             return self.loss(y_pred.view(-1, y_pred.shape[-1]), y.view(-1))
