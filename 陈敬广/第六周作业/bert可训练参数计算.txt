@@ -1,0 +1,30 @@
+vocab_size:词表长度； hidden_size：字向量维度； num_layers:Transformer层数
+（1）embedding
+公式1: vocab_size * hidden_size * 3
+(2) 经过线性归一化
+w.shape(hidden_size,hidden_size) b.shape(hidden_size)
+公式2: hidden_size*hidden_size+hidden_size
+(3) Transformer  self-attention
+qW.shape(hidden_size,hidden_size) qB.shape(hidden_size)
+kW.shape(hidden_size,hidden_size) kB.shape(hidden_size)
+vW.shape(hidden_size,hidden_size) vB.shape(hidden_size)
+  再经过一个线性层输出
+  w.shape(hidden_size,hidden_size) b.shape(hidden_size)
+  残差计算后再经过一个线性层归一化
+  w.shape(hidden_size,hidden_size) b.shape(hidden_size)
+公式3: （hidden_size*hidden_size+hidden_size）*5
+(4) Transformer  feed-forward
+    第一层线性层
+    w.shape(intermediate_size, hidden_size) b.shape(intermediate_size)
+    第一层线性层
+    w.shape(hidden_size,intermediate_size) b.shape(hidden_size)
+    残差计算后再经过一个线性层归一化
+   w.shape(hidden_size,hidden_size) b.shape(hidden_size)
+公式4: intermediate_size*hidden_size*2+intermediate_size+hidden_size
+
+公式1 + 公式2 + (公式3+公式4) * num_layers
+vocab_size * hidden_size * 3 +
+hidden_size*hidden_size+hidden_size +
+( (hidden_size*hidden_size+hidden_size)*5 +
+intermediate_size*hidden_size*2+intermediate_size+hidden_size ) * num_layers
+

@@ -1,0 +1,11 @@
+nnlm是一个用lstm做自回归生成式任务。现在改用bert实现
+    1. 修改构造样本的函数
+    2. 训练时加attention_mask
+        2.1 预测时要加吗？
+            不用，因为预测是x = x + y_pred ，本身就是类似seq-to-seq的lm
+    3. 修改encode函数
+
+    4. 理解ppl
+
+def add_char_after_match(s, match_char, add_char):
+    return s.replace(match_char, match_char + add_char)
