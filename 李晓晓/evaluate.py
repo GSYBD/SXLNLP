@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import torch
+import re
+import numpy as np
+from collections import defaultdict
 from loader import load_data
 
 """
@@ -12,64 +15,94 @@ class Evaluator:
         self.model = model
         self.logger = logger
         self.valid_data = load_data(config["valid_data_path"], config, shuffle=False)
-        # 由于效果测试需要训练集当做知识库，再次加载训练集。
-        # 事实上可以通过传参把前面加载的训练集传进来更合理，但是为了主流程代码改动量小，在这里重新加载一遍
-        self.train_data = load_data(config["train_data_path"], config)
-        self.stats_dict = {"correct":0, "wrong":0}  #用于存储测试结果
 
-    #将知识库中的问题向量化，为匹配做准备
-    #每轮训练的模型参数不一样，生成的向量也不一样，所以需要每轮测试都重新进行向量化
-    def knwb_to_vector(self):
-        self.question_index_to_standard_question_index = {}
-        self.question_ids = []
-        for standard_question_index, question_ids in self.train_data.dataset.knwb.items():
-            for question_id in question_ids:
-                #记录问题编号到标准问题标号的映射，用来确认答案是否正确
-                self.question_index_to_standard_question_index[len(self.question_ids)] = standard_question_index
-                self.question_ids.append(question_id)
-        with torch.no_grad():
-            question_matrixs = torch.stack(self.question_ids, dim=0)
-            if torch.cuda.is_available():
-                question_matrixs = question_matrixs.cuda()
-            self.knwb_vectors = self.model(question_matrixs)
-            #将所有向量都作归一化 v / |v|
-            self.knwb_vectors = torch.nn.functional.normalize(self.knwb_vectors, dim=-1)
-        return
 
     def eval(self, epoch):
         self.logger.info("开始测试第%d轮模型效果：" % epoch)
-        self.stats_dict = {"correct":0, "wrong":0}  #清空前一轮的测试结果
+        self.stats_dict = {"LOCATION": defaultdict(int),
+                           "TIME": defaultdict(int),
+                           "PERSON": defaultdict(int),
+                           "ORGANIZATION": defaultdict(int)}
         self.model.eval()
-        self.knwb_to_vector()
         for index, batch_data in enumerate(self.valid_data):
+            sentences = self.valid_data.dataset.sentences[index * self.config["batch_size"]: (index+1) * self.config["batch_size"]]
             if torch.cuda.is_available():
                 batch_data = [d.cuda() for d in batch_data]
             input_id, labels = batch_data   #输入变化时这里需要修改，比如多输入，多输出的情况
             with torch.no_grad():
-                test_question_vectors = self.model(input_id) #不输入labels，使用模型当前参数进行预测
-            self.write_stats(test_question_vectors, labels)
+                pred_results = self.model(input_id) #不输入labels，使用模型当前参数进行预测
+            self.write_stats(labels, pred_results, sentences)
         self.show_stats()
         return
 
-    def write_stats(self, test_question_vectors, labels):
-        assert len(labels) == len(test_question_vectors)
-        for test_question_vector, label in zip(test_question_vectors, labels):
-            #通过一次矩阵乘法，计算输入问题和知识库中所有问题的相似度
-            #test_question_vector shape [vec_size]   knwb_vectors shape = [n, vec_size]
-            res = torch.mm(test_question_vector.unsqueeze(0), self.knwb_vectors.T)
-            hit_index = int(torch.argmax(res.squeeze())) #命中问题标号
-            hit_index = self.question_index_to_standard_question_index[hit_index] #转化成标准问编号
-            if int(hit_index) == int(label):
-                self.stats_dict["correct"] += 1
-            else:
-                self.stats_dict["wrong"] += 1
+    def write_stats(self, labels, pred_results, sentences):
+        assert len(labels) == len(pred_results) == len(sentences)
+        if not self.config["use_crf"]:
+            pred_results = torch.argmax(pred_results, dim=-1)
+        for true_label, pred_label, sentence in zip(labels, pred_results, sentences):
+            if not self.config["use_crf"]:
+                pred_label = pred_label.cpu().detach().tolist()
+            true_label = true_label.cpu().detach().tolist()
+            true_entities = self.decode(sentence, true_label)
+            pred_entities = self.decode(sentence, pred_label)
+
+            # 正确率 = 识别出的正确实体数 / 识别出的实体数
+            # 召回率 = 识别出的正确实体数 / 样本的实体数
+            for key in ["PERSON", "LOCATION", "TIME", "ORGANIZATION"]:
+                self.stats_dict[key]["正确识别"] += len([ent for ent in pred_entities[key] if ent in true_entities[key]])
+                self.stats_dict[key]["样本实体数"] += len(true_entities[key])
+                self.stats_dict[key]["识别出实体数"] += len(pred_entities[key])
         return
 
     def show_stats(self):
-        correct = self.stats_dict["correct"]
-        wrong = self.stats_dict["wrong"]
-        self.logger.info("预测集合条目总量：%d" % (correct +wrong))
-        self.logger.info("预测正确条目：%d，预测错误条目：%d" % (correct, wrong))
-        self.logger.info("预测准确率：%f" % (correct / (correct + wrong)))
+        F1_scores = []
+        for key in ["PERSON", "LOCATION", "TIME", "ORGANIZATION"]:
+            # 正确率 = 识别出的正确实体数 / 识别出的实体数
+            # 召回率 = 识别出的正确实体数 / 样本的实体数
+            precision = self.stats_dict[key]["正确识别"] / (1e-5 + self.stats_dict[key]["识别出实体数"])
+            recall = self.stats_dict[key]["正确识别"] / (1e-5 + self.stats_dict[key]["样本实体数"])
+            F1 = (2 * precision * recall) / (precision + recall + 1e-5)
+            F1_scores.append(F1)
+            self.logger.info("%s类实体，准确率：%f, 召回率: %f, F1: %f" % (key, precision, recall, F1))
+        self.logger.info("Macro-F1: %f" % np.mean(F1_scores))
+        correct_pred = sum([self.stats_dict[key]["正确识别"] for key in ["PERSON", "LOCATION", "TIME", "ORGANIZATION"]])
+        total_pred = sum([self.stats_dict[key]["识别出实体数"] for key in ["PERSON", "LOCATION", "TIME", "ORGANIZATION"]])
+        true_enti = sum([self.stats_dict[key]["样本实体数"] for key in ["PERSON", "LOCATION", "TIME", "ORGANIZATION"]])
+        micro_precision = correct_pred / (total_pred + 1e-5)
+        micro_recall = correct_pred / (true_enti + 1e-5)
+        micro_f1 = (2 * micro_precision * micro_recall) / (micro_precision + micro_recall + 1e-5)
+        self.logger.info("Micro-F1 %f" % micro_f1)
         self.logger.info("--------------------")
         return
+
+    '''
+    {
+      "B-LOCATION": 0,
+      "B-ORGANIZATION": 1,
+      "B-PERSON": 2,
+      "B-TIME": 3,
+      "I-LOCATION": 4,
+      "I-ORGANIZATION": 5,
+      "I-PERSON": 6,
+      "I-TIME": 7,
+      "O": 8
+    }
+    '''
+    def decode(self, sentence, labels):
+        sentence = "$" + sentence
+        labels = "".join([str(x) for x in labels[:len(sentence)+1]])
+        results = defaultdict(list)
+        for location in re.finditer("(04+)", labels):
+            s, e = location.span()
+            results["LOCATION"].append(sentence[s:e])
+        for location in re.finditer("(15+)", labels):
+            s, e = location.span()
+            results["ORGANIZATION"].append(sentence[s:e])
+        for location in re.finditer("(26+)", labels):
+            s, e = location.span()
+            results["PERSON"].append(sentence[s:e])
+        for location in re.finditer("(37+)", labels):
+            s, e = location.span()
+            results["TIME"].append(sentence[s:e])
+        return results
+
