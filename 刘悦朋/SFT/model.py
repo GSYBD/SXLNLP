@@ -14,8 +14,7 @@ class STFModel(nn.Module):
 
     def forward(self, x, mask=None, y=None):
         if y is not None:
-            x, _ = self.bert(x)
-            # x, _ = self.bert(x, attention_mask=mask)
+            x, _ = self.bert(x, attention_mask=mask)
             y_predict = self.classify(x)
             return self.loss(y_predict.view(-1, y_predict.shape[-1]), y.view(-1))
         else:
