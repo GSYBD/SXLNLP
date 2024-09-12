@@ -48,8 +48,3 @@ def choose_optimizer(config, model):
         return Adam(model.parameters(), lr=learning_rate)
     elif optimizer == "sgd":
         return SGD(model.parameters(), lr=learning_rate)
-
-
-if __name__ == "__main__":
-    from config import Config
-    model = TorchModel(Config)
