@@ -19,5 +19,5 @@ Config = {
     "learning_rate": 1e-4,
     "use_crf": False,
     "class_num": 9,
-    "bert_path": "/Users/zuiqingfeng/Documents/八斗人工智能/第六周 预训练模型/bert-base-chinese",
+    "bert_path": r"D:\AI\KEJIAN\bert-base-chinese",
 }
