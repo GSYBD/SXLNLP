@@ -27,13 +27,15 @@ class LanguageModel(nn.Module):
 
     # 当输入真实标签，返回loss值；无真实标签，返回预测值
     def forward(self, x, y=None):
-        mask = torch.tril(torch.ones((x.shape[0], x.shape[1], x.shape[1])))
-        x, _ = self.bert(x, attention_mask=mask)
-        y_pred = self.classify(x)  # output shape:(batch_size, vocab_size)
-
+         # output shape:(batch_size, vocab_size)
         if y is not None:
+            mask = torch.tril(torch.ones((x.shape[0], x.shape[1], x.shape[1])))
+            x, _ = self.bert(x, attention_mask=mask)
+            y_pred = self.classify(x)
             return self.loss(y_pred.view(-1, y_pred.shape[-1]), y.view(-1))
         else:
+            x, _ = self.bert(x)
+            y_pred = self.classify(x)
             return torch.softmax(y_pred, dim=-1)
 
 

@@ -119,7 +119,7 @@ def build_sample(corpus,max_length):
     # 设置x_mask_t的值为-100
     x_sample_t = x_sample_t.fill_(-100)
     # 构造y_sample，y_sample进行横向拼接
-    y_sample = x_sample_t.tolist() + y_sample
+    y_sample = x_sample_t[:-1].tolist() + y_sample +[-100] # label 要错开一位
  
     return x_sample,y_sample ,mask
 
@@ -152,7 +152,7 @@ def generate_sentence(openings, model, vocab, window_size):
     with torch.no_grad():
         pred_char = ""
         #生成了换行符，或生成文本超过30字则终止迭代
-        while pred_char != "\n" and len(openings) <= 30:
+        while pred_char != "\n" and len(openings) <= 130:
             openings += pred_char
             # x = [vocab.get(char, vocab["<UNK>"]) for char in openings[-window_size:]]
             # 使用bert的tokenizer 进行序列化
@@ -212,7 +212,7 @@ def calc_perplexity(sentence, model, vocab, window_size):
 def train(corpus_path, save_weight=True):
     epoch_num = 20        #训练轮数
     batch_size = 64       #每次训练样本个数
-    train_sample = 10000   #每轮训练总共训练的样本总数
+    train_sample = 20000   #每轮训练总共训练的样本总数
     char_dim = 768        #每个字的维度
     window_size = 100       #样本文本长度
     vocab = build_vocab("vocab.txt")       #建立字表
@@ -220,7 +220,7 @@ def train(corpus_path, save_weight=True):
     model = build_model(vocab, char_dim)    #建立模型
     if torch.cuda.is_available():
         model = model.cuda()
-    optim = torch.optim.Adam(model.parameters(), lr=0.00001)   #建立优化器
+    optim = torch.optim.Adam(model.parameters(), lr=0.0001)   #建立优化器
     print("文本词表模型加载完毕，开始训练")
     for epoch in range(epoch_num):
         model.train()
