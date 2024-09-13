@@ -1,0 +1,71 @@
+# 分词正向切分的实现
+import time
+
+# 加载前缀词典
+# 用0，1来区分是前缀还是真词,注意此处用0，1标识就会解决切词的时候出现单字成词后的切出筛选问题
+# 有可能前缀是真词，记录的时候不要相互覆盖
+def load_prefix_word_dict(path):
+    prefix_dict = {}
+    with open(path,encoding="utf8") as f:
+        for line in f:
+            word = line.split()[0]
+            for i in range(1,len(word)):
+                if word[:i] not in prefix_dict:   # 此处用not in比直接用in好的点比如你，你好，如果判断in，你好会覆盖掉你的标识
+                    prefix_dict[word[:i]] = 0
+            prefix_dict[word] = 1
+    return prefix_dict
+
+word_dict = load_prefix_word_dict("dict.txt")
+# print(f"输出word_dict的值{word_dict}")
+
+# 输入字符串和字典，返回词的列表
+def cut_method2(string, prefix_dict):
+    if string == "":
+        return []
+    words = []  # 放切好的词表
+    start_index, end_index = 0, 1  # 记录窗口的起始位置
+    window = string[start_index:end_index]  # 从第一个字开始
+    find_word = window  # 将第一个字先当作默认词
+    # print(f"输出此处的find_word：{find_word}")
+    while start_index < len(string):
+        # 窗口里没词了
+        if window not in prefix_dict or end_index>len(string):
+            words.append(find_word)  # 给words里加入默认词
+            start_index += len(find_word)  # 更新起点位置
+            end_index = start_index + 1
+            window = string[start_index:end_index]  # 从新位置开始向后遍历
+            find_word = window
+        # 窗口里的是词
+        elif prefix_dict[window] == 1:
+            find_word = window  # 查到了一个词，还要看看有没有比他更长的词
+            end_index += 1
+            window = string[start_index:end_index]
+            # print(f"当前words是词的操作:{words}")
+        # 窗口是一个前缀
+        elif prefix_dict[window] == 0:
+            end_index += 1
+            window = string[start_index:end_index]
+            # print(f"当前words是前缀时的操作:{words}")
+    # 最后找到的window如果不在词典里，把单独的字加入切词结果
+    if prefix_dict.get(window) != 1:
+        words += list(window)
+        # print(f"输出最后找到的window如果不在词典里，if情况把单独的字加入切词结果{words}")
+    return words
+
+
+# cut_method是切割函数
+# output_path是输出路径
+def main (cut_method, input_path, output_path):
+    word_dict = load_prefix_word_dict("dict.txt")
+    writer = open(output_path, "w", encoding="utf8")
+    start_time = time.time()
+    with open(input_path, encoding="utf8") as f:
+        for line in f:
+            words = cut_method(line.strip(), word_dict)
+            writer.write(" / ".join(words) + "\n")
+    writer.close()
+    print("耗时: ", time.time() - start_time)
+    return
+
+
+main(cut_method2, "corpus.txt", "cut_method2_output.txt")

@@ -1,0 +1,41 @@
+【假设条件】
+字/词表长度：10000
+每个字/词的维度：768
+最大句子长度：512
+句内类别: 2
+encoder(decoder) layer: 1
+liner 1 intermediate: 3072
+
+——————————embedding层——————————
+token embedding: 10000 * 768
+segment embedding: 2 * 768
+position embedding: 512 * 768
+layerNorm w: 768
+layerNorm b: 768
+
+小计：(10000 * 768) + (2 * 768) + (512 * 768) + 768 + 768 = 8076288
+
+——————————self-attention层——————————
+  Wq  +  bias      * (q/k/v)
+(768 * 768 + 768 ) *    3
+
+z = Attention(q, k, v)
+output = Liner(z) = W(z) + b = 768 * 768 + 768
+layerNorm w: 768
+layerNorm b: 768
+
+小计：(768 * 768 + 768 ) * 3 + (768 * 768 + 768) + 768 + 768 = 2363904
+
+——————————feed-forward层——————————
+liner1: 768 * 3072 + 3072
+line2:  3072 * 768 + 768
+
+layerNorm w: 768
+layerNorm b: 768
+
+小计：(768 * 3072 + 3072) +  (3072 * 768 + 768) + 768 + 768
+
+——————————pool_fc层——————————
+768 * 768 + 768
+
+小计: 768 * 768 + 768

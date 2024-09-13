@@ -1,0 +1,47 @@
+from transformers import BertModel
+
+model = BertModel.from_pretrained(r"F:\学习资料\PYTHON\课程\第六周 预训练模型\bert-base-chinese", return_dict=False)
+n = 2                       # 输入最大句子个数
+vocab = 21128               # 词表数目
+max_sequence_length = 512   # 最大句子长度
+embedding_size = 768        # embedding维度
+hide_size = 3072            # 隐藏层维数
+
+##embedding层的可训练参数
+#词表转换成向量
+word_embeddings=vocab*embedding_size
+#输入语句位置编码，实现句子中每个词都是独一无二的编码结果，此处按照最长输入结果计算
+position_embeddings=max_sequence_length*embedding_size
+#输入语句顺序编码，每次最多输入两个语句
+segment_embeddings=n*embedding_size
+#embedding层的归一化处理
+Embedding_layer_norm=embedding_size*2
+#embedding层的可训练参数总数
+Embeddings_param=word_embeddings+position_embeddings+segment_embeddings+Embedding_layer_norm
+
+##transformer层的可训练参数
+#qkv可训练参数，因为Q,K,V的三个参数计算都是点乘W再加B
+QKV_paramemter=3*(embedding_size*embedding_size+embedding_size)
+#attention输出的线性计算，对输出的结果进行点乘W再加B
+Attention_output_param=embedding_size*embedding_size+embedding_size
+#attention的归一化
+Attention_layer_norm_param=embedding_size*2
+#attention的可训练参数
+Attention_param=QKV_paramemter+Attention_output_param+Attention_layer_norm_param
+#attention计算完成后，进行feed_forward计算
+# intermediate全连接层，或Feed Forward Network，简称FFN，它的维数是embedding维数的数倍，能够将
+#bert的隐藏层从768维升高到3072维，为模型提供了更多的线性变换能力，有助于模型捕获更复杂的特征，增强对复杂语言任务的处理能力
+#intermediate的大小是模型复杂度与性能之间的一个平衡点
+Intermediate_param=hide_size*embedding_size+hide_size
+#feed_forward输出
+Feed_forward_output=embedding_size*hide_size+embedding_size
+#feed_forward归一化处理
+Feed_forward_layer_norm_param=embedding_size*2
+#Feed_forward的可训练参数
+Feed_forward_param=Intermediate_param+Feed_forward_output+Feed_forward_layer_norm_param
+#pooler层
+Pooler_dense_param=embedding_size*embedding_size+embedding_size
+
+bert_param_total=Embeddings_param+Attention_param+Feed_forward_param+Pooler_dense_param
+print("模型实际参数个数为%d" % sum(p.numel() for p in model.parameters()))
+print("diy计算参数个数为%d" % bert_param_total)

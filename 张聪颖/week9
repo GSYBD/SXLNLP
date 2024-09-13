@@ -1,0 +1,14 @@
+from transformers import pipeline
+
+# 使用预训练的BERT模型创建一个NER任务的pipeline
+ner_model = pipeline("ner", model="dbmdz/bert-large-cased-finetuned-conll03-english")
+
+# 定义要进行NER的文本
+text = "Apple is looking at buying U.K. startup for $1 billion."
+
+# 使用模型预测文本中的命名实体
+entities = ner_model(text)
+
+# 输出结果
+for entity in entities:
+    print(f"Entity: {entity['word']}, Label: {entity['entity']}")

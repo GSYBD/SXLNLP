@@ -1,0 +1,15 @@
+from transformers import BertModel
+def count_trainable_parameters(model_name):
+    # 加载 BERT 模型
+    model = BertModel.from_pretrained(model_name)   
+    # 计算模型中所有可训练参数的数量
+    total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)  
+    return total_params
+
+# 计算 BERT-base 模型中的可训练参数数量
+bert_base_params = count_trainable_parameters('bert-base-uncased')
+print(f'Total trainable parameters in BERT-base: {bert_base_params}')
+
+# 计算 BERT-large 模型中的可训练参数数量
+bert_large_params = count_trainable_parameters('bert-large-uncased')
+print(f'Total trainable parameters in BERT-large: {bert_large_params}')
