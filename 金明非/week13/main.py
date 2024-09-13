@@ -50,7 +50,7 @@ def main(config):
     if tuning_tactics == "lora_tuning":
         # lora配置会冻结原始模型中的所有层的权重，不允许其反传梯度
         # 但是事实上我们希望最后一个线性层照常训练，只是bert部分被冻结，所以需要手动设置
-        for param in model.get_submodule("model").get_submodule("classifier").parameters():
+        for param in model.get_submodule("model").get_submodule("classify").parameters():
             param.requires_grad = True
 
     # 标识是否使用gpu
