@@ -29,10 +29,16 @@ class TorchModel(nn.Module):
     def __init__(self, input_size):
         super(TorchModel, self).__init__()
         self.linear = nn.Linear(input_size, input_size) # 全连接层
+        self.activate = nn.Sigmoid()
         self.loss = nn.CrossEntropyLoss() # 损失函数
-
+        self.dropout = nn.Dropout(0.35)
     def forward(self, x, y=None):
+
+        x = self.linear(x)
+        x = self.dropout(x)
+        # x = self.activate(x)
         y_pred = self.linear(x)
+
         if (y is not None):
             return self.loss(y_pred, y)
         else:
@@ -100,7 +106,7 @@ def main():
     torch.save(model.state_dict(), 'modelc.pth')
 
 if __name__ == '__main__':
-   # main()
-
-   res = build_dataset(10)
-   predict('modelc.pth', res[0], 6)
+   main()
+   #
+   # res = build_dataset(10)
+   # predict('modelc.pth', res[0], 6)

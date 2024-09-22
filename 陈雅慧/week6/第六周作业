@@ -1,0 +1,17 @@
+Embeddig : （1）vocab_size*hidden_size+type_vocab_size*hidden_size+max_position_embeddings*hidden_size
+加和后layer Normalization ：（2）hidden_size+hidden_size
+------------------------------------------------------------------------------------
+self-attention:
+3个线性层：（3）3*（hidden_size*hidden_size+hidden_size)
+经过线性层：（4）hidden_size*hidden_size+hidden_size
+layer Normalization: （5）hidden_size+hidden_size
+
+Feed Forward:
+先经过线性层： （6）hidden_size*intermediate_size+intermediate_size
+经过gelu后再过线性层： （7）intermediate_size*hidden_size+hidden_size
+layer Normalization: （8）hidden_size+hidden_size
+
+
+考虑transformer的层数后，合计参数量要乘以num_hidden_layers
+
+整个模型参数合计为：（1）+（2）+num_hidden_layers*（（3）+（4）+（5）（6）+（7）+（8））
