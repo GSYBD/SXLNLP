@@ -5,7 +5,8 @@ import ast
 '''
 bpe构建词表
 · 窗口滑动统计词频
-· 合并字，组成新的词表，使用字节形式存储
+· 合并字，组成新的词表，使用字节形式临时存储
+· 将merges字典保存为文件
 · encode和decode
 '''
 
@@ -36,16 +37,26 @@ def build_vocab(text):
     tokens = list(map(int, tokens))
     ids = list(tokens) 
     merges = {} # (int, int) -> int
-    for i in range(num_merges):
-        stats = get_stats(ids)
-        # 获取词频最高的二元组
-        pair = max(stats, key=stats.get)
-        idx = 256 + i
-        print(f"merging {pair} into a new token {idx}")
-        # 返回合并后的字表
-        ids = merge(ids, pair, idx)
-        # 记录新合成的词,用于decode
-        merges[pair] = idx
+    # 默认读取 JSON 文件
+    filename = "data.json"
+    try:
+        # 尝试读取 JSON 文件
+        with open(filename, 'r') as file:
+            data = json.load(file)
+        # 将键从字符串转换为元组
+        merges = {eval(key): value for key, value in data.items()}
+    except FileNotFoundError:
+        for i in range(num_merges):
+            stats = get_stats(ids)
+            # 获取词频最高的二元组
+            pair = max(stats, key=stats.get)
+            idx = 256 + i
+            print(f"merging {pair} into a new token {idx}")
+            # 返回合并后的字表
+            ids = merge(ids, pair, idx)
+            # 记录新合成的词,用于decode
+            merges[pair] = idx
+
     
     vocab = {idx: bytes([idx]) for idx in range(256)}
     for (p0, p1), idx in merges.items():
