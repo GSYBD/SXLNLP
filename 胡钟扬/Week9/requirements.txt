@@ -1,0 +1,5 @@
+jieba==0.42.1
+numpy==1.24.3
+pytorch_crf==0.7.2
+torch==2.0.1
+torch==2.3.0
