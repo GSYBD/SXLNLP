@@ -1,0 +1,29 @@
+# 演员和电影的简单关系：Keanu Reeves出演了《The Matrix》。
+
+# 创建Person节点和Movie节点:
+CREATE (keanu:Person {name: 'Keanu Reeves'});
+CREATE (matrix:Movie {title: 'The Matrix'});
+
+# 创建关系:
+CREATE (keanu)-[:ACTED_IN]->(matrix);
+
+
+# 问题 1：Keanu Reeves出演了什么电影？
+
+MATCH (keanu:Person {name: 'Keanu Reeves'})-[:ACTED_IN]->(movie:Movie)
+RETURN movie.title
+
+# 结果：
+
+movie.title
+The Matrix
+
+# 问题 2：谁出演了《The Matrix》？
+
+MATCH (actor:Person)-[:ACTED_IN]->(matrix:Movie {title: 'The Matrix'})
+RETURN actor.name
+
+# 结果：
+
+actor.name
+Keanu Reeves
