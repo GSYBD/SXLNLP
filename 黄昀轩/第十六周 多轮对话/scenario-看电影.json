@@ -1,0 +1,21 @@
+[
+{
+"id":"node1",
+"intent":["看电影"],
+"slot":["#电影名字#", "#时间#", "#观众人数#"],
+"action":["select 电影 where 类型=#电影名字# and 时间=#时间# and 人数=#观众人数#"],
+"response":"为您预定，#时间#点的#电影名字#，#观众人数# 张票",
+"childnode":["node2", "node3"]
+},
+{
+"id":"node2",
+"intent":["饮料"],
+"response":"好的给你#饮料#",
+"childnode":["node3"]
+},
+{
+"id":"node3",
+"intent":["零食"],
+"response":"好的，给你#零食#"
+}
+]
