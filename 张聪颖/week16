@@ -1,0 +1,46 @@
+对话场景示例用户与系统的互动如下：
+用户: "今天天气怎么样？"
+
+系统: "今天天气晴朗，气温在25℃到30℃之间。"
+
+用户: "我没听清，可以再说一遍吗？"
+
+系统: "当然可以。今天天气晴朗，气温在25℃到30℃之间。"
+关键词识别：检测用户的输入中是否包含“再说一遍”、“我没听清”等关键词。
+#处理用户输入
+def process_user_input(user_message):  
+# 将用户输入添加到对话历史 
+dialog_history.append({"user": user_message})  
+
+# 检测是否为重听请求 
+if "再说一遍" in user_message or "我没听清" in user_message:
+    return handle_repeat_request()   
+else:  
+    return handle_regular_request(user_message)  
+
+# 常规请求处理
+def handle_regular_request(user_message):  
+ # 模拟处理天气请求
+if "天气" in user_message:  
+    response = "今天天气晴朗，气温在25℃到30℃之间。"  
+    dialog_history.append({"system": response})  
+return response 
+#其他请求处理可以添加在这里
+response = "抱歉，我不太明白你的问题。"  
+ialog_history.append({"system": response})  
+return response
+#处理重听请求
+def handle_repeat_request():  
+    if dialog_history:  
+ # 获取最后一条系统的响应 
+        last_response = dialog_history[-1]["system"]  
+        return last_response 
+    else:  
+        return "没有过去的响应可以重复。"  
+
+# 示例交互过程
+print(process_user_input("今天天气怎么样？"))
+# 用户询问天气
+print(process_user_input("我没听清，可以再说一遍吗？"))
+
+
